@@ -39,7 +39,9 @@ EnterMap::
 	ld [wJoyIgnore], a
 
 OverworldLoop::
-	call DelayFrame
+	;call DelayFrame	;60fps
+	call Check60fps
+	call z, DelayFrame
 OverworldLoopLessDelay::
 	call DelayFrame
 	call LoadGBPal
@@ -58,6 +60,15 @@ OverworldLoopLessDelay::
 	bit 3, [hl]
 	res 3, [hl]
 	jp nz, WarpFound2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;joenote - check if trainer is wanting to battle and cancel fly/teleport warp if so
+	ld hl, wFlags_D733
+	bit 3, [hl]
+	jr z, .continueWithWarp
+	ld hl, wd732
+	res 3, [hl]
+.continueWithWarp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	ld a, [wd732]
 	and 1 << 4 | 1 << 3 ; fly warp or dungeon warp
 	jp nz, HandleFlyWarpOrDungeonWarp
@@ -80,13 +91,24 @@ OverworldLoopLessDelay::
 	jp .displayDialogue
 .startButtonNotPressed
 	bit 0, a ; A button
+	jr nz, .AorSelectPressed
+	bit 2, a	;Select button
 	jp z, .checkIfDownButtonIsPressed
-; if A is pressed
+; if A or SELECT is pressed
+.AorSelectPressed
 	ld a, [wd730]
-	bit 2, a
+	bit 2, a	;check if input is being ignored
 	jp nz, .noDirectionButtonsPressed
 	call IsPlayerCharacterBeingControlledByGame
 	jr nz, .checkForOpponent
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;joenote - do something if select is pressed
+	ld a, [hJoyPressed]
+	bit 2, a	;is Select being pressed?
+	jr z, .notselect
+	;select was pressed, so call functions here
+.notselect
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	call CheckForHiddenObjectOrBookshelfOrCardKeyDoor
 	ld a, [$ffeb]
 	and a
@@ -104,24 +126,25 @@ OverworldLoopLessDelay::
 	bit 0, a
 	jr nz, .checkForOpponent
 	aCoord 8, 9
-	ld [wTilePlayerStandingOn], a ; unused?
+	ld [wTilePlayerStandingOn], a 
 	call DisplayTextID ; display either the start menu or the NPC/sign text
-	ld a, [wEnteringCableClub]
+	ld a, [wEnteringCableClub]	;this can only be a 0 or a 1
 	and a
 	jr z, .checkForOpponent
 	dec a
 	ld a, 0
 	ld [wEnteringCableClub], a
-	jr z, .changeMap
+	jr z, .changeMap	;this only jumps if the previous dec a reduces a to 0
 ; XXX can this code be reached?
-	predef LoadSAV
-	ld a, [wCurMap]
-	ld [wDestinationMap], a
-	call SpecialWarpIn
-	ld a, [wCurMap]
-	call SwitchToMapRomBank ; switch to the ROM bank of the current map
-	ld hl, wCurMapTileset
-	set 7, [hl]
+;no, it cannot be reached
+;	predef LoadSAV
+;	ld a, [wCurMap]
+;	ld [wDestinationMap], a
+;	call SpecialWarpIn
+;	ld a, [wCurMap]
+;	call SwitchToMapRomBank ; switch to the ROM bank of the current map
+;	ld hl, wCurMapTileset
+;	set 7, [hl]
 .changeMap
 	jp EnterMap
 .checkForOpponent
@@ -178,57 +201,9 @@ OverworldLoopLessDelay::
 
 .handleDirectionButtonPress
 	ld [wPlayerDirection], a ; new direction
-	ld a, [wd730]
-	bit 7, a ; are we simulating button presses?
-	jr nz, .noDirectionChange ; ignore direction changes if we are
-	ld a, [wCheckFor180DegreeTurn]
-	and a
-	jr z, .noDirectionChange
-	ld a, [wPlayerDirection] ; new direction
-	ld b, a
-	ld a, [wPlayerLastStopDirection] ; old direction
-	cp b
-	jr z, .noDirectionChange
-; Check whether the player did a 180-degree turn.
-; It appears that this code was supposed to show the player rotate by having
-; the player's sprite face an intermediate direction before facing the opposite
-; direction (instead of doing an instantaneous about-face), but the intermediate
-; direction is only set for a short period of time. It is unlikely for it to
-; ever be visible because DelayFrame is called at the start of OverworldLoop and
-; normally not enough cycles would be executed between then and the time the
-; direction is set for V-blank to occur while the direction is still set.
-	swap a ; put old direction in upper half
-	or b ; put new direction in lower half
-	cp (PLAYER_DIR_DOWN << 4) | PLAYER_DIR_UP ; change dir from down to up
-	jr nz, .notDownToUp
-	ld a, PLAYER_DIR_LEFT
-	ld [wPlayerMovingDirection], a
-	jr .holdIntermediateDirectionLoop
-.notDownToUp
-	cp (PLAYER_DIR_UP << 4) | PLAYER_DIR_DOWN ; change dir from up to down
-	jr nz, .notUpToDown
-	ld a, PLAYER_DIR_RIGHT
-	ld [wPlayerMovingDirection], a
-	jr .holdIntermediateDirectionLoop
-.notUpToDown
-	cp (PLAYER_DIR_RIGHT << 4) | PLAYER_DIR_LEFT ; change dir from right to left
-	jr nz, .notRightToLeft
-	ld a, PLAYER_DIR_DOWN
-	ld [wPlayerMovingDirection], a
-	jr .holdIntermediateDirectionLoop
-.notRightToLeft
-	cp (PLAYER_DIR_LEFT << 4) | PLAYER_DIR_RIGHT ; change dir from left to right
-	jr nz, .holdIntermediateDirectionLoop
-	ld a, PLAYER_DIR_UP
-	ld [wPlayerMovingDirection], a
-.holdIntermediateDirectionLoop
-	ld hl, wFlags_0xcd60
-	set 2, [hl]
-	ld hl, wCheckFor180DegreeTurn
-	dec [hl]
-	jr nz, .holdIntermediateDirectionLoop
-	ld a, [wPlayerDirection]
-	ld [wPlayerMovingDirection], a
+	callba Determine180degreeMove	;joenote - moved to func_overworld.asm to save space
+	jr c, .noDirectionChange
+
 	call NewBattle
 	jp c, .battleOccurred
 	jp OverworldLoop
@@ -261,7 +236,14 @@ OverworldLoopLessDelay::
 	jp c, OverworldLoop
 
 .noCollision
-	ld a, $08
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;60fps - counter is doubled
+	call Check60fps
+	ld a, $8
+	jr z, .pc60fpsCounter
+	ld a, $10
+.pc60fpsCounter
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	ld [wWalkCounter], a
 	jr .moveAhead2
 
@@ -273,16 +255,26 @@ OverworldLoopLessDelay::
 .noSpinning
 	call UpdateSprites
 
-.moveAhead2
+.moveAhead2		;joenote - rewriting this to implement an optional running or speedup functionality
 	ld hl, wFlags_0xcd60
 	res 2, [hl]
-	ld a, [wWalkBikeSurfState]
-	dec a ; riding a bike?
-	jr nz, .normalPlayerSpriteAdvancement
+	;ld a, [wWalkBikeSurfState]
+	;dec a ; riding a bike?
+	;jr nz, .normalPlayerSpriteAdvancement
 	ld a, [wd736]
 	bit 6, a ; jumping a ledge?
 	jr nz, .normalPlayerSpriteAdvancement
+	;call DoBikeSpeedup
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	callba TrackRunBikeSpeed
+.speedloop
+	ld a, [wUnusedD119]
+	dec a
+	ld [wUnusedD119], a
+	jr z, .normalPlayerSpriteAdvancement
 	call DoBikeSpeedup
+	jr .speedloop
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 .normalPlayerSpriteAdvancement
 	call AdvancePlayerSprite
 	ld a, [wWalkCounter]
@@ -490,8 +482,8 @@ WarpFound2::
 ; this is for handling "outside" maps that can't have the 0xFF destination map
 	ld a, [wCurMap]
 	ld [wLastMap], a
-	ld a, [wCurMapWidth]
-	ld [wUnusedD366], a ; not read
+	;ld a, [wCurMapWidth]
+	;ld [wUnusedD366], a ; not read
 	ld a, [hWarpDestinationMap]
 	ld [wCurMap], a
 	cp ROCK_TUNNEL_1
@@ -545,133 +537,19 @@ ContinueCheckWarpsNoCollisionLoop::
 	jp nz, CheckWarpsNoCollisionLoop
 
 ; if no matching warp was found
-CheckMapConnections::
-.checkWestMap
-	ld a, [wXCoord]
-	cp $ff
-	jr nz, .checkEastMap
-	ld a, [wMapConn3Ptr]
-	ld [wCurMap], a
-	ld a, [wWestConnectedMapXAlignment] ; new X coordinate upon entering west map
-	ld [wXCoord], a
-	ld a, [wYCoord]
-	ld c, a
-	ld a, [wWestConnectedMapYAlignment] ; Y adjustment upon entering west map
-	add c
-	ld c, a
-	ld [wYCoord], a
-	ld a, [wWestConnectedMapViewPointer] ; pointer to upper left corner of map without adjustment for Y position
-	ld l, a
-	ld a, [wWestConnectedMapViewPointer + 1]
-	ld h, a
-	srl c
-	jr z, .savePointer1
-.pointerAdjustmentLoop1
-	ld a, [wWestConnectedMapWidth] ; width of connected map
-	add MAP_BORDER * 2
-	ld e, a
-	ld d, 0
-	ld b, 0
-	add hl, de
-	dec c
-	jr nz, .pointerAdjustmentLoop1
-.savePointer1
-	ld a, l
-	ld [wCurrentTileBlockMapViewPointer], a ; pointer to upper left corner of current tile block map section
-	ld a, h
-	ld [wCurrentTileBlockMapViewPointer + 1], a
-	jp .loadNewMap
+CheckMapConnections::	;joenote - these routines moved to func_overworld.asm to save space
+	callba CheckWestMap	;jump to the others as needed without returning to be more efficient
+	;jr z, .loadNewMap	
 
-.checkEastMap
-	ld b, a
-	ld a, [wCurrentMapWidth2] ; map width
-	cp b
-	jr nz, .checkNorthMap
-	ld a, [wMapConn4Ptr]
-	ld [wCurMap], a
-	ld a, [wEastConnectedMapXAlignment] ; new X coordinate upon entering east map
-	ld [wXCoord], a
-	ld a, [wYCoord]
-	ld c, a
-	ld a, [wEastConnectedMapYAlignment] ; Y adjustment upon entering east map
-	add c
-	ld c, a
-	ld [wYCoord], a
-	ld a, [wEastConnectedMapViewPointer] ; pointer to upper left corner of map without adjustment for Y position
-	ld l, a
-	ld a, [wEastConnectedMapViewPointer + 1]
-	ld h, a
-	srl c
-	jr z, .savePointer2
-.pointerAdjustmentLoop2
-	ld a, [wEastConnectedMapWidth]
-	add MAP_BORDER * 2
-	ld e, a
-	ld d, 0
-	ld b, 0
-	add hl, de
-	dec c
-	jr nz, .pointerAdjustmentLoop2
-.savePointer2
-	ld a, l
-	ld [wCurrentTileBlockMapViewPointer], a ; pointer to upper left corner of current tile block map section
-	ld a, h
-	ld [wCurrentTileBlockMapViewPointer + 1], a
-	jp .loadNewMap
+;callba CheckEastMap
+	;jr z, .loadNewMap
 
-.checkNorthMap
-	ld a, [wYCoord]
-	cp $ff
-	jr nz, .checkSouthMap
-	ld a, [wMapConn1Ptr]
-	ld [wCurMap], a
-	ld a, [wNorthConnectedMapYAlignment] ; new Y coordinate upon entering north map
-	ld [wYCoord], a
-	ld a, [wXCoord]
-	ld c, a
-	ld a, [wNorthConnectedMapXAlignment] ; X adjustment upon entering north map
-	add c
-	ld c, a
-	ld [wXCoord], a
-	ld a, [wNorthConnectedMapViewPointer] ; pointer to upper left corner of map without adjustment for X position
-	ld l, a
-	ld a, [wNorthConnectedMapViewPointer + 1]
-	ld h, a
-	ld b, 0
-	srl c
-	add hl, bc
-	ld a, l
-	ld [wCurrentTileBlockMapViewPointer], a ; pointer to upper left corner of current tile block map section
-	ld a, h
-	ld [wCurrentTileBlockMapViewPointer + 1], a
-	jp .loadNewMap
+;callba CheckNorthMap
+	;jr z, .loadNewMap
 
-.checkSouthMap
-	ld b, a
-	ld a, [wCurrentMapHeight2]
-	cp b
+;callba CheckSouthMap
 	jr nz, .didNotEnterConnectedMap
-	ld a, [wMapConn2Ptr]
-	ld [wCurMap], a
-	ld a, [wSouthConnectedMapYAlignment] ; new Y coordinate upon entering south map
-	ld [wYCoord], a
-	ld a, [wXCoord]
-	ld c, a
-	ld a, [wSouthConnectedMapXAlignment] ; X adjustment upon entering south map
-	add c
-	ld c, a
-	ld [wXCoord], a
-	ld a, [wSouthConnectedMapViewPointer] ; pointer to upper left corner of map without adjustment for X position
-	ld l, a
-	ld a, [wSouthConnectedMapViewPointer + 1]
-	ld h, a
-	ld b, 0
-	srl c
-	add hl, bc
-	ld a, l
-	ld [wCurrentTileBlockMapViewPointer], a ; pointer to upper left corner of current tile block map section
-	ld a, h
-	ld [wCurrentTileBlockMapViewPointer + 1], a
+
 .loadNewMap ; load the connected map that was entered
 	call LoadMapHeader
 	call PlayDefaultMusicFadeOutCurrent
@@ -1368,6 +1246,8 @@ TilePairCollisionsWater::
 	db FOREST, $14, $2E
 	db FOREST, $48, $2E
 	db CAVERN, $14, $05
+	db GYM	 , $14, $32	;joenote - can't surf into statue base
+	db GYM	 , $14, $33 ;joenote - can't surf into statue base
 	db $FF
 
 ; this builds a tile map from the tile block map based on the current X/Y coordinates of the player's character
@@ -1478,7 +1358,19 @@ AdvancePlayerSprite::
 	ld [wXCoord], a
 .afterUpdateMapCoords
 	ld a, [wWalkCounter] ; walking animation counter
-	cp $07
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;60fps - counter is doubled
+	push bc
+	ld b, a
+	call Check60fps
+	ld a, b
+	ld b, $07
+	jr z, .pc60fpsCounterComp
+	ld b, $0F
+.pc60fpsCounterComp
+	cp b
+	pop bc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	jp nz, .scrollBackgroundAndSprites
 ; if this is the first iteration of the animation
 	ld a, c
@@ -1538,10 +1430,10 @@ AdvancePlayerSprite::
 	or $98
 	ld [wMapViewVRAMPointer + 1], a
 .adjustXCoordWithinBlock
-	ld a, c
-	and a
-	jr z, .pointlessJump ; mistake?
-.pointlessJump
+;	ld a, c
+;	and a
+;	jr z, .pointlessJump ; mistake?
+;.pointlessJump
 	ld hl, wXBlockCoord
 	ld a, [hl]
 	add c
@@ -1625,8 +1517,14 @@ AdvancePlayerSprite::
 	ld b, a
 	ld a, [wSpriteStateData1 + 5] ; delta X
 	ld c, a
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;60fps - halve the x & y deltas
+	call Check60fps
+	jr nz, .xy60fpsEnd
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	sla b
 	sla c
+.xy60fpsEnd
 	ld a, [hSCY]
 	add b
 	ld [hSCY], a ; update background scroll Y
@@ -1892,7 +1790,6 @@ JoypadOverworld::
 ; if done simulating button presses
 .doneSimulating
 	xor a
-	ld [wWastedByteCD3A], a
 	ld [wSimulatedJoypadStatesIndex], a
 	ld [wSimulatedJoypadStatesEnd], a
 	ld [wJoyIgnore], a
@@ -2001,19 +1898,17 @@ RunMapScript::
 
 LoadWalkingPlayerSpriteGraphics::
 	ld de, RedSprite
-	ld hl, vNPCSprites
 	jr LoadPlayerSpriteGraphicsCommon
 
 LoadSurfingPlayerSpriteGraphics::
 	ld de, SeelSprite
-	ld hl, vNPCSprites
 	jr LoadPlayerSpriteGraphicsCommon
 
 LoadBikePlayerSpriteGraphics::
 	ld de, RedCyclingSprite
-	ld hl, vNPCSprites
 
 LoadPlayerSpriteGraphicsCommon::
+	ld hl, vNPCSprites
 	push de
 	push hl
 	lb bc, BANK(RedSprite), $0c
@@ -2030,11 +1925,12 @@ LoadPlayerSpriteGraphicsCommon::
 	lb bc, BANK(RedSprite), $0c
 	jp CopyVideoData
 
+
 ; function to load data from the map header
 LoadMapHeader::
 	callba MarkTownVisitedAndLoadMissableObjects
-	ld a, [wCurMapTileset]
-	ld [wUnusedD119], a
+	;ld a, [wCurMapTileset]
+	;ld [wUnusedD119], a
 	ld a, [wCurMap]
 	call SwitchToMapRomBank
 	ld a, [wCurMapTileset]
@@ -2221,8 +2117,8 @@ LoadMapHeader::
 	ld a, [hLoadSpriteTemp1]
 	ld [hli], a ; store movement byte 2 in byte 0 of sprite entry
 	ld a, [hLoadSpriteTemp2]
-	ld [hl], a ; this appears pointless, since the value is overwritten immediately after
-	ld a, [hLoadSpriteTemp2]
+	;ld [hl], a ; this appears pointless, since the value is overwritten immediately after
+	;ld a, [hLoadSpriteTemp2]
 	ld [hLoadSpriteTemp1], a
 	and $3f
 	ld [hl], a ; store text ID in byte 1 of sprite entry
@@ -2332,7 +2228,7 @@ LoadMapData::
 	ld [hSCY], a
 	ld [hSCX], a
 	ld [wWalkCounter], a
-	ld [wUnusedD119], a
+	;ld [wUnusedD119], a
 	ld [wWalkBikeSurfStateCopy], a
 	ld [wSpriteSetID], a
 	call LoadTextBoxTilePatterns
@@ -2421,3 +2317,8 @@ ForceBikeOrSurf::
 	ld hl, LoadPlayerSpriteGraphics
 	call Bankswitch
 	jp PlayDefaultMusic ; update map/player state?
+
+Check60fps:
+	ld a, [wUnusedD721]
+	bit 4, a
+	ret

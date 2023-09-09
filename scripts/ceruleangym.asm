@@ -62,8 +62,8 @@ CeruleanGymScript_5c70d:
 .asm_5c736
 	ld hl, wObtainedBadges
 	set 1, [hl]
-	ld hl, wBeatGymFlags
-	set 1, [hl]
+	;ld hl, wBeatGymFlags	;joenote - redundant
+	;set 1, [hl]
 
 	; deactivate gym trainers
 	SetEvents EVENT_BEAT_CERULEAN_GYM_TRAINER_0, EVENT_BEAT_CERULEAN_GYM_TRAINER_1
@@ -157,6 +157,7 @@ CeruleanGymText7:
 
 CeruleanGymText_5c7d8:
 	TX_FAR _CeruleanGymText_5c7d8
+	;joenote - now plays an unused item sfx for getting a badge
 	TX_SFX_KEY_ITEM ; actually plays the second channel of SFX_BALL_POOF due to the wrong music bank being loaded
 	TX_BLINK
 	db "@"

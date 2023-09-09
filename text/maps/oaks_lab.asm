@@ -133,8 +133,8 @@ _OaksLabGivePokeballsText2::
 	cont "it's fair game."
 
 	para "Just throw a #"
-	line "BALL at it and try"
-	line "to catch it!"
+	line "BALL at it and"
+	cont "try to catch it!"
 
 	para "This won't always"
 	line "work, though."
@@ -146,7 +146,7 @@ _OaksLabGivePokeballsText2::
 
 _OaksLabPleaseVisitText::
 	text "OAK: Come see me"
-	line "sometimes."
+	line "sometime."
 
 	para "I want to know how"
 	line "your #DEX is"
@@ -261,8 +261,9 @@ _OaksLabText_1d3be::
 	prompt
 
 _OaksLabText_1d3c3::
-	text "<RIVAL>: Yeah! Am"
-	line "I great or what?"
+	text "Yeah!"
+	line "Am I great or"
+	cont "what?"
 	prompt
 
 _OaksLabRivalToughenUpText::
@@ -475,3 +476,4 @@ _OaksLabText_4424c::
 	line "entirely complete!"
 	cont "Congratulations!"
 	done
+

@@ -403,3 +403,4 @@ SilphCo10Text_6236c:
 SilphCo10Text_6237b:
 	TX_FAR _SilphCo10Text_6237b
 	db "@"
+

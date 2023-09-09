@@ -59,13 +59,13 @@ ItemUsePtrTable:
 	dw UnusableItem      ; DOME_FOSSIL
 	dw UnusableItem      ; HELIX_FOSSIL
 	dw UnusableItem      ; SECRET_KEY
-	dw UnusableItem
+	dw UnusableItem		 ; XXX
 	dw UnusableItem      ; BIKE_VOUCHER
 	dw ItemUseXAccuracy  ; X_ACCURACY
 	dw ItemUseEvoStone   ; LEAF_STONE
 	dw ItemUseCardKey    ; CARD_KEY
 	dw UnusableItem      ; NUGGET
-	dw UnusableItem      ; ??? PP_UP
+	dw UnusableItem      ; unused PP_UP
 	dw ItemUsePokedoll   ; POKE_DOLL
 	dw ItemUseMedicine   ; FULL_HEAL
 	dw ItemUseMedicine   ; REVIVE
@@ -165,13 +165,20 @@ ItemUseBall:
 .notOldManBattle
 ; If the player is fighting the ghost Marowak, set the value that indicates the
 ; Pokémon can't be caught and skip the capture calculations.
-	ld a, [wCurMap]
-	cp POKEMONTOWER_6
-	jr nz, .loop
-	ld a, [wEnemyMonSpecies2]
-	cp MAROWAK
+	;ld a, [wCurMap]
+	;cp POKEMONTOWER_6
+	;jr nz, .loop
+	;ld a, [wEnemyMonSpecies2]
+	;cp MAROWAK
+	;ld b, $10 ; can't be caught value
+	;jp z, .setAnimData
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;joenote - use a bit to determine if this is a ghost marowak battle
+	CheckEvent EVENT_10E
+	jr z, .loop
 	ld b, $10 ; can't be caught value
-	jp z, .setAnimData
+	jp .setAnimData
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Get the first random number. Let it be called Rand1.
 ; Rand1 must be within a certain range according the kind of ball being thrown.
@@ -209,6 +216,18 @@ ItemUseBall:
 
 ; If it's an Ultra/Safari Ball and Rand1 is greater than 150, try again.
 	ld a, 150
+	cp b
+	jr c, .loop
+	
+;joenote - pump up those safari balls
+
+; Less than or equal to 150 is good enough for an Ultra Ball.
+	ld a, [hl]
+	cp ULTRA_BALL
+	jr z, .checkForAilments
+	
+; If it's a Safari Ball and Rand1 is greater than 'a', try again.
+	ld a, 125
 	cp b
 	jr c, .loop
 
@@ -251,7 +270,8 @@ ItemUseBall:
 
 ; Determine BallFactor. It's 8 for Great Balls and 12 for the others.
 	ld a, [wcf91]
-	cp GREAT_BALL
+	;cp GREAT_BALL
+	cp SAFARI_BALL ;joenote - great balls now have factor of 12 and safari balls now have factor of 8
 	ld a, 12
 	jr nz, .skip1
 	ld a, 8
@@ -344,6 +364,10 @@ ItemUseBall:
 	jr z, .skip4
 	ld b, 150
 	cp ULTRA_BALL
+	jr z, .skip4
+;joenote - pump up those safari balls to account for changed ball factor
+	ld b, 125
+	cp SAFARI_BALL
 	jr z, .skip4
 
 .skip4
@@ -473,8 +497,9 @@ ItemUseBall:
 	ld hl, wEnemyBattleStatus3
 	bit TRANSFORMED, [hl]
 	jr z, .notTransformed
-	ld a, DITTO
-	ld [wEnemyMonSpecies2], a
+;joenote - these two lines removed to fix the ditto bug
+	;ld a, DITTO
+	;ld [wEnemyMonSpecies2], a
 	jr .skip6
 
 .notTransformed
@@ -562,6 +587,12 @@ ItemUseBall:
 	jr nz, .printTransferredToPCText
 	ld hl, ItemUseBallText08
 .printTransferredToPCText
+	call PrintText
+;joenote - add reminder that box is now full
+	ld a, [wNumInBox] ; is box full?
+	cp MONS_PER_BOX
+	jr nz, .done
+	ld hl, BoxFullReminderTXT
 	call PrintText
 	jr .done
 
@@ -738,9 +769,7 @@ ItemUseSurfboard:
 .storeSimulatedButtonPress
 	ld a, b
 	ld [wSimulatedJoypadStatesEnd], a
-	xor a
-	ld [wWastedByteCD39], a
-	inc a
+	ld a, 1
 	ld [wSimulatedJoypadStatesIndex], a
 	ret
 
@@ -896,19 +925,28 @@ ItemUseMedicine:
 	ld a, [wPlayerMonNumber]
 	cp d ; is pokemon the item was used on active in battle?
 	jp nz, .doneHealing
-; if it is active in battle
-	xor a
-	ld [wBattleMonStatus], a ; remove the status ailment in the in-battle pokemon data
+; if it is active in battle		
+	;joenote - this part is getting a bit of a rewrite to prevent resetting all stats when using a status healing item
 	push hl
 	ld hl, wPlayerBattleStatus3
 	res BADLY_POISONED, [hl] ; heal Toxic status
+	ld a, [H_WHOSETURN]
+	push af
+	xor a	;forcibly set it to the player's turn
+	ld [H_WHOSETURN], a
+	callab UndoBurnParStats	;undo brn/par stat changes
+	pop af
+	ld [H_WHOSETURN], a
 	pop hl
+	xor a
+	ld [wBattleMonStatus], a ; remove the status ailment in the in-battle pokemon data
+	ld [wPlayerToxicCounter], a	;clear toxic counter
 	ld bc, wPartyMon1Stats - wPartyMon1Status
 	add hl, bc ; hl now points to party stats
 	ld de, wBattleMonStats
 	ld bc, NUM_STATS * 2
-	call CopyData ; copy party stats to in-battle stat data
-	predef DoubleOrHalveSelectedStats
+	;call CopyData ; copy party stats to in-battle stat data
+	;predef DoubleOrHalveSelectedStats	;effectively does nothing here
 	jp .doneHealing
 .healHP
 	inc hl ; hl = address of current HP
@@ -1154,8 +1192,27 @@ ItemUseMedicine:
 	jr nz, .updateInBattleData
 	ld bc, wPartyMon1Status - (wPartyMon1MaxHP + 1)
 	add hl, bc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;joenote - undo brn/par stat changes for Full Restore after restoring HP in battle
+	ld a, [wIsInBattle]
+	and a
+	jr z, .clearParBrn	;do not adjust the stats if not currently in battle
+	push hl
+	push de
+	ld a, [H_WHOSETURN]
+	push af
+	xor a	;forcibly set it to the player's turn
+	ld [H_WHOSETURN], a
+	callab UndoBurnParStats	;undo brn/par stat changes
+	pop af
+	ld [H_WHOSETURN], a
+	pop de
+	pop hl
+.clearParBrn
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	xor a
 	ld [hl], a ; remove the status ailment in the party data
+	ld [wPlayerToxicCounter], a	;clear toxic counter
 .updateInBattleData
 	ld h, d
 	ld l, e
@@ -1342,8 +1399,17 @@ ItemUseMedicine:
 	push de
 	ld d, a
 	callab CalcExperience ; calculate experience for next level and store it at $ff96
+;joenote - do not allow candy if CalcExperience capped the level
+	ld a, [wCurEnemyLVL]
+	cp d
 	pop de
 	pop hl
+	jr z, .candy_continue
+	dec a
+	ld [hl], a
+	ld [wCurEnemyLVL], a
+	jr .vitaminNoEffect
+.candy_continue
 	ld bc, wPartyMon1Exp - wPartyMon1Level
 	add hl, bc ; hl now points to MSB of experience
 ; update experience to minimum for new level
@@ -1494,6 +1560,11 @@ ItemUseEscapeRope:
 	ld a, [wCurMap]
 	cp AGATHAS_ROOM
 	jr z, .notUsable
+;joenote - added from pokeyellow; do not allow in Bill's house or the Fan Club
+	cp BILLS_HOUSE
+	jr z, .notUsable
+	cp POKEMON_FAN_CLUB
+	jr z, .notUsable
 	ld a, [wCurMapTileset]
 	ld b, a
 	ld hl, EscapeRopeTilesets
@@ -1597,8 +1668,9 @@ ItemUseCardKey:
 .done
 	ld hl, ItemUseText00
 	call PrintText
-	ld hl, wd728
-	set 7, [hl]
+	;joenote - removed because this bit is never used by anything (old key card implementation)
+	;ld hl, wd728
+	;set 7, [hl]
 	ret
 
 ; These tables are probably supposed to be door locations in Silph Co.,
@@ -1646,6 +1718,11 @@ ItemUsePokedoll:
 	ld a, [wIsInBattle]
 	dec a
 	jp nz, ItemUseNotTime
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;joenote - if this is a ghost marowak battle, prevent using a pokedoll
+	CheckEvent EVENT_10E
+	jp nz, ItemUseNotTime
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	ld a, $01
 	ld [wEscapedFromBattle], a
 	jp PrintItemUseTextAndRemoveItem
@@ -2070,6 +2147,12 @@ ItemUsePPRestore:
 	ld a, [wPlayerMonNumber]
 	cp b ; is the pokemon whose PP was restored active in battle?
 	jr nz, .skipUpdatingInBattleData
+	
+	;joenote - do not update active mon if it is transformed
+	ld a, [wPlayerBattleStatus3]
+	bit 3, a ; is the mon transformed?
+	jp nz, .skipUpdatingInBattleData
+	
 	ld hl, wPartyMon1PP
 	ld bc, wPartyMon2 - wPartyMon1
 	call AddNTimes
@@ -2126,6 +2209,8 @@ ItemUsePPRestore:
 ; are used to count how many PP Ups have been used on the move. So, Max Ethers
 ; and Max Elixirs will not be detected as having no effect on a move with full
 ; PP if the move has had any PP Ups used on it.
+;joenote - fixing this
+	and %00111111 ; lower 6 bit bits store current PP
 	cp b ; does current PP equal max PP?
 	ret z
 	jr .storeNewAmount
@@ -2395,6 +2480,11 @@ BoxFullCannotThrowBallText:
 	TX_FAR _BoxFullCannotThrowBallText
 	db "@"
 
+;joenote - add a reminder that the box is full
+BoxFullReminderTXT:
+	TX_FAR _BoxIsFullReminderText
+	db "@"
+	
 ItemUseText00:
 	TX_FAR _ItemUseText001
 	TX_LINE
@@ -2854,6 +2944,7 @@ SendNewMonToBox:
 	jr nz, .asm_e8b1
 	ret
 
+;joenote - replacing this with adapted code from pokemon yellow to prevent statue fishing/surfing
 ; checks if the tile in front of the player is a shore or water tile
 ; used for surfing and fishing
 ; unsets carry if it is, sets carry if not
@@ -2861,25 +2952,35 @@ IsNextTileShoreOrWater:
 	ld a, [wCurMapTileset]
 	ld hl, WaterTilesets
 	ld de, 1
-	call IsInArray
-	jr nc, .notShoreOrWater
+	call IsInArray ; does the current map allow surfing?
+	jr nc, .notShoreOrWater	; if not, return
+	ld hl, WaterTile
 	ld a, [wCurMapTileset]
 	cp SHIP_PORT ; Vermilion Dock tileset
-	ld a, [wTileInFrontOfPlayer] ; tile in front of player
 	jr z, .skipShoreTiles ; if it's the Vermilion Dock tileset
-	cp $48 ; eastern shore tile in Safari Zone
-	jr z, .shoreOrWater
-	cp $32 ; usual eastern shore tile
-	jr z, .shoreOrWater
+	cp GYM ; eastern shore tile in Safari Zone
+	jr z, .skipShoreTiles
+	cp DOJO ; usual eastern shore tile
+	jr z, .skipShoreTiles
+	ld hl, ShoreTiles
 .skipShoreTiles
-	cp $14 ; water tile
-	jr z, .shoreOrWater
+	ld a, [wTileInFrontOfPlayer]
+	ld de, $1
+	call IsInArray
+	jr c, .shoreOrWater
 .notShoreOrWater
 	scf
 	ret
 .shoreOrWater
 	and a
 	ret
+
+; shore tiles
+ShoreTiles:
+	db $48, $32
+WaterTile:
+	db $14
+	db $ff ; terminator
 
 ; tilesets with water
 WaterTilesets:

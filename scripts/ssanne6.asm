@@ -55,6 +55,8 @@ SSAnne6Text7:
 	call PrintText
 	jp TextScriptEnd
 
+	
+
 SSAnne6Text_61807:
 	TX_FAR _SSAnne6Text_61807
 	db "@"
@@ -70,3 +72,4 @@ SSAnne6Text_61811:
 SSAnne6Text_61816:
 	TX_FAR _SSAnne6Text_61816
 	db "@"
+

@@ -1,8 +1,9 @@
+;joenote - LoadGBPal instances moved to RedisplayStartMenu
 StartMenu_Pokedex:
 	predef ShowPokedexMenu
 	call LoadScreenTilesFromBuffer2 ; restore saved screen
 	call Delay3
-	call LoadGBPal
+	;call LoadGBPal
 	call UpdateSprites
 	jp RedisplayStartMenu
 
@@ -26,7 +27,7 @@ StartMenu_Pokemon:
 .exitMenu
 	call GBPalWhiteOutWithDelay3
 	call RestoreScreenTilesAndReloadTilePatterns
-	call LoadGBPal
+	;call LoadGBPal
 	jp RedisplayStartMenu
 .chosePokemon
 	call SaveScreenTilesToBuffer1
@@ -134,6 +135,8 @@ StartMenu_Pokemon:
 	jp z, .newBadgeRequired
 	call CheckIfInOutsideMap
 	jr z, .canFly
+	call .checkifforest	;allow flying out of forest maps
+	jr z, .canFly
 	ld a, [wWhichPokemon]
 	ld hl, wPartyMonNicks
 	call GetPartyMonName
@@ -144,6 +147,9 @@ StartMenu_Pokemon:
 	call ChooseFlyDestination
 	ld a, [wd732]
 	bit 3, a ; did the player decide to fly?
+	push af
+	call nz, .reset_safari ;make sure to reset the safari zone
+	pop af
 	jp nz, .goBackToMap
 	call LoadFontTilePatterns
 	ld hl, wd72e
@@ -205,6 +211,8 @@ StartMenu_Pokemon:
 .teleport
 	call CheckIfInOutsideMap
 	jr z, .canTeleport
+	call .checkifforest	;allow teleporting out of forest maps
+	jr z, .canTeleport
 	ld a, [wWhichPokemon]
 	ld hl, wPartyMonNicks
 	call GetPartyMonName
@@ -214,6 +222,7 @@ StartMenu_Pokemon:
 .canTeleport
 	ld hl, .warpToLastPokemonCenterText
 	call PrintText
+	call .reset_safari	;make sure to reset the safari zone
 	ld hl, wd732
 	set 3, [hl]
 	set 6, [hl]
@@ -279,6 +288,18 @@ StartMenu_Pokemon:
 	ld hl, .newBadgeRequiredText
 	call PrintText
 	jp .loop
+.reset_safari
+	;reset safari zone
+	ResetEvent EVENT_IN_SAFARI_ZONE
+	xor a
+	ld [wNumSafariBalls], a
+	ld [wSafariZoneEntranceCurScript], a
+	ret
+.checkifforest
+	;used for fly and teleport
+	ld a, [wCurMapTileset]
+	cp FOREST
+	ret
 .newBadgeRequiredText
 	TX_FAR _NewBadgeRequiredText
 	db "@"
@@ -340,6 +361,8 @@ StartMenu_Item:
 	ld a, [wcf91]
 	cp BICYCLE
 	jp z, .useOrTossItem
+	cp SURFBOARD	;joenote - fixing surfboard glitch freeze
+	jp z, .useOrTossItem
 .notBicycle1
 	ld a, USE_TOSS_MENU_TEMPLATE
 	ld [wTextBoxID], a
@@ -369,8 +392,11 @@ StartMenu_Item:
 	call GetItemName
 	call CopyStringToCF4B ; copy name to wcf4b
 	ld a, [wcf91]
+	cp SURFBOARD	;joenote - fixing surfboard glitch freeze, and cannot use surfboard if being forced to ride bike
+	jr z, .is_surfboard
 	cp BICYCLE
 	jr nz, .notBicycle2
+.is_surfboard
 	ld a, [wd732]
 	bit 5, a
 	jr z, .useItem_closeMenu
@@ -515,7 +541,7 @@ StartMenu_TrainerInfo:
 	call LoadScreenTilesFromBuffer2 ; restore saved screen
 	call RunDefaultPaletteCommand
 	call ReloadMapData
-	call LoadGBPal
+	;call LoadGBPal
 	pop af
 	ld [hTilesetType], a
 	jp RedisplayStartMenu
@@ -539,10 +565,15 @@ DrawTrainerInfo:
 	ld de, vChars2 + $770
 	ld bc, $0080
 	push bc
-	call TrainerInfo_FarCopyData
+	call TrainerInfo_FarCopyData ;joenote - do the circle tile separately from name tiles
 	ld hl, BlankLeaderNames
 	ld de, vChars2 + $600
-	ld bc, $0170
+;	ld bc, $0160
+	ld bc, $0150	;joenote - going to restore the names which uses 16 less bytes
+	call TrainerInfo_FarCopyData
+	ld hl, CircleTile
+	ld de, vChars2 + $760
+	ld bc, $10
 	call TrainerInfo_FarCopyData
 	pop bc
 	ld hl, BadgeNumbersTileGraphics  ; badge number tile patterns
@@ -690,7 +721,9 @@ StartMenu_SaveReset:
 	jp nz, Init
 	predef SaveSAV ; save the game
 	call LoadScreenTilesFromBuffer2 ; restore saved screen
-	jp HoldTextDisplayOpen
+	;jp HoldTextDisplayOpen
+	jp CloseStartMenu ;joenote - prevent menu from being held open with A button
+						;and instead only hold for a single button press
 
 StartMenu_Option:
 	xor a

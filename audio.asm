@@ -366,14 +366,15 @@ PlayBattleMusic::
 	xor a
 	ld [wAudioFadeOutControl], a
 	ld [wLowHealthAlarm], a
-	dec a
-	ld [wNewSoundID], a
-	call PlaySound ; stop music
+	call StopAllMusic
 	call DelayFrame
 	ld c, BANK(Music_GymLeaderBattle)
 	ld a, [wGymLeaderNo]
 	and a
 	jr z, .notGymLeaderBattle
+	;joenote - use gym leader dummy value 9 to initiate final battle music
+	cp $09
+	jr z, .finalBattle
 	ld a, MUSIC_GYM_LEADER_BATTLE
 	jr .playSong
 .notGymLeaderBattle
@@ -403,6 +404,7 @@ INCLUDE "audio/engine_1.asm"
 
 ; an alternate start for MeetRival which has a different first measure
 Music_RivalAlternateStart::
+	call DelayFrame	;joenote - added to help alleviate out of sync audio
 	ld c, BANK(Music_MeetRival)
 	ld a, MUSIC_MEET_RIVAL
 	call PlayMusic
@@ -537,26 +539,6 @@ INCLUDE "engine/menu/bills_pc.asm"
 INCLUDE "audio/engine_2.asm"
 
 
-Music_PokeFluteInBattle::
-	; begin playing the "caught mon" sound effect
-	ld a, SFX_CAUGHT_MON
-	call PlaySoundWaitForCurrent
-	; then immediately overwrite the channel pointers
-	ld hl, wChannelCommandPointers + Ch4 * 2
-	ld de, SFX_08_PokeFlute_Ch4
-	call Audio2_OverwriteChannelPointer
-	ld de, SFX_08_PokeFlute_Ch5
-	call Audio2_OverwriteChannelPointer
-	ld de, SFX_08_PokeFlute_Ch6
-
-Audio2_OverwriteChannelPointer:
-	ld a, e
-	ld [hli], a
-	ld a, d
-	ld [hli], a
-	ret
-
-
 SECTION "Audio Engine 3", ROMX, BANK[AUDIO_3]
 
 PlayPokedexRatingSfx::
@@ -571,9 +553,7 @@ PlayPokedexRatingSfx::
 	jr .getSfxPointer
 .gotSfxPointer
 	push bc
-	ld a, $ff
-	ld [wNewSoundID], a
-	call PlaySoundWaitForCurrent
+	call StopAllMusic
 	pop bc
 	ld b, $0
 	ld hl, PokedexRatingSfxPointers

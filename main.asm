@@ -5,11 +5,13 @@ NPC_SPRITES_2 EQU $5
 
 GFX EQU $4
 
-PICS_1 EQU $9
+PICS_1 EQU $2F
 PICS_2 EQU $A
 PICS_3 EQU $B
 PICS_4 EQU $C
 PICS_5 EQU $D
+PICS_6 EQU $30
+PICS_7 EQU $31
 
 INCLUDE "home.asm"
 
@@ -20,9 +22,10 @@ INCLUDE "data/facing.asm"
 
 INCLUDE "engine/black_out.asm"
 
-MewPicFront:: INCBIN "pic/bmon/mew.pic"
-MewPicBack::  INCBIN "pic/monback/mewb.pic"
-INCLUDE "data/baseStats/mew.asm"
+;MewPicFront:: INCBIN "pic/bmon/mew.pic"	;moved to a proper rom bank
+;MewPicBack::  INCBIN "pic/monback/mewb.pic"
+;INCLUDE "data/baseStats/mew.asm"	;this has been moved to be with the other pokemon base stat files
+INCLUDE "data/baseStats/missingno.asm"	;joenote - added basestats for fossil kabutops missingno
 
 INCLUDE "engine/battle/safari_zone.asm"
 
@@ -31,7 +34,7 @@ INCLUDE "engine/load_mon_data.asm"
 
 INCLUDE "data/item_prices.asm"
 INCLUDE "text/item_names.asm"
-INCLUDE "text/unused_names.asm"
+;INCLUDE "text/unused_names.asm"	;joenote - free up space in bank 1
 
 INCLUDE "engine/overworld/oam.asm"
 INCLUDE "engine/oam_dma.asm"
@@ -40,7 +43,7 @@ INCLUDE "engine/print_waiting_text.asm"
 
 INCLUDE "engine/overworld/map_sprite_functions1.asm"
 
-INCLUDE "engine/test_battle.asm"
+;INCLUDE "engine/test_battle.asm"	;joenote - remove to free up space
 
 INCLUDE "engine/overworld/item.asm"
 INCLUDE "engine/overworld/movement.asm"
@@ -53,7 +56,7 @@ INCLUDE "engine/oak_speech.asm"
 
 INCLUDE "engine/special_warps.asm"
 
-INCLUDE "engine/debug1.asm"
+;INCLUDE "engine/debug1.asm"	;joenote - remove to free up space
 
 INCLUDE "engine/menu/naming_screen.asm"
 
@@ -171,7 +174,15 @@ BattleHudTiles1End:
 BattleHudTiles2:                INCBIN "gfx/battle_hud2.1bpp"
 BattleHudTiles3:                INCBIN "gfx/battle_hud3.1bpp"
 BattleHudTiles3End:
+
+IF DEF(_REDGREENJP)
+NintendoCopyrightLogoGraphics:  INCBIN "gfx/copyright_green.2bpp"
+ELIF DEF(_BLUEJP)
+NintendoCopyrightLogoGraphics:  INCBIN "gfx/copyright_bluejp.2bpp"
+ELSE
 NintendoCopyrightLogoGraphics:  INCBIN "gfx/copyright.2bpp"
+ENDC
+
 GamefreakLogoGraphics:          INCBIN "gfx/gamefreak.2bpp"
 GamefreakLogoGraphicsEnd:
 TextBoxGraphics:                INCBIN "gfx/text_box.2bpp"
@@ -180,7 +191,11 @@ PokedexTileGraphics:            INCBIN "gfx/pokedex.2bpp"
 PokedexTileGraphicsEnd:
 WorldMapTileGraphics:           INCBIN "gfx/town_map.2bpp"
 WorldMapTileGraphicsEnd:
+IF DEF(_REDGREENJP)
+PlayerCharacterTitleGraphics:   INCBIN "gfx/player_title_green.2bpp"
+ELSE
 PlayerCharacterTitleGraphics:   INCBIN "gfx/player_title.2bpp"
+ENDC
 PlayerCharacterTitleGraphicsEnd:
 
 
@@ -452,6 +467,7 @@ INCLUDE "data/mapHeaders/saffronhouse1.asm"
 INCLUDE "scripts/saffronhouse1.asm"
 INCLUDE "data/mapObjects/saffronhouse1.asm"
 
+
 INCLUDE "data/mapHeaders/saffronhouse2.asm"
 INCLUDE "scripts/saffronhouse2.asm"
 INCLUDE "data/mapObjects/saffronhouse2.asm"
@@ -517,7 +533,52 @@ INCLUDE "engine/hidden_object_functions7.asm"
 
 
 SECTION "Pics 1", ROMX, BANK[PICS_1]
-
+IF DEF(_REDGREENJP)
+RhydonPicFront::      INCBIN "pic/rgmon/rhydon.pic"
+RhydonPicBack::       INCBIN "pic/monback/rhydonb.pic"
+KangaskhanPicFront::  INCBIN "pic/rgmon/kangaskhan.pic"
+KangaskhanPicBack::   INCBIN "pic/monback/kangaskhanb.pic"
+NidoranMPicFront::    INCBIN "pic/rgmon/nidoranm.pic"
+NidoranMPicBack::     INCBIN "pic/monback/nidoranmb.pic"
+ClefairyPicFront::    INCBIN "pic/rgmon/clefairy.pic"
+ClefairyPicBack::     INCBIN "pic/monback/clefairyb.pic"
+SpearowPicFront::     INCBIN "pic/rgmon/spearow.pic"
+SpearowPicBack::      INCBIN "pic/monback/spearowb.pic"
+VoltorbPicFront::     INCBIN "pic/rgmon/voltorb.pic"
+VoltorbPicBack::      INCBIN "pic/monback/voltorbb.pic"
+NidokingPicFront::    INCBIN "pic/rgmon/nidoking.pic"
+NidokingPicBack::     INCBIN "pic/monback/nidokingb.pic"
+SlowbroPicFront::     INCBIN "pic/rgmon/slowbro.pic"
+SlowbroPicBack::      INCBIN "pic/monback/slowbrob.pic"
+IvysaurPicFront::     INCBIN "pic/rgmon/ivysaur.pic"
+IvysaurPicBack::      INCBIN "pic/monback/ivysaurb.pic"
+ExeggutorPicFront::   INCBIN "pic/rgmon/exeggutor.pic"
+ExeggutorPicBack::    INCBIN "pic/monback/exeggutorb.pic"
+LickitungPicFront::   INCBIN "pic/rgmon/lickitung.pic"
+LickitungPicBack::    INCBIN "pic/monback/lickitungb.pic"
+ExeggcutePicFront::   INCBIN "pic/rgmon/exeggcute.pic"
+ExeggcutePicBack::    INCBIN "pic/monback/exeggcuteb.pic"
+GrimerPicFront::      INCBIN "pic/rgmon/grimer.pic"
+GrimerPicBack::       INCBIN "pic/monback/grimerb.pic"
+GengarPicFront::      INCBIN "pic/rgmon/gengar.pic"
+GengarPicBack::       INCBIN "pic/monback/gengarb.pic"
+NidoranFPicFront::    INCBIN "pic/rgmon/nidoranf.pic"
+NidoranFPicBack::     INCBIN "pic/monback/nidoranfb.pic"
+NidoqueenPicFront::   INCBIN "pic/rgmon/nidoqueen.pic"
+NidoqueenPicBack::    INCBIN "pic/monback/nidoqueenb.pic"
+CubonePicFront::      INCBIN "pic/rgmon/cubone.pic"
+CubonePicBack::       INCBIN "pic/monback/cuboneb.pic"
+RhyhornPicFront::     INCBIN "pic/rgmon/rhyhorn.pic"
+RhyhornPicBack::      INCBIN "pic/monback/rhyhornb.pic"
+LaprasPicFront::      INCBIN "pic/rgmon/lapras.pic"
+LaprasPicBack::       INCBIN "pic/monback/laprasb.pic"
+ArcaninePicFront::    INCBIN "pic/rgmon/arcanine.pic"
+ArcaninePicBack::     INCBIN "pic/monback/arcanineb.pic"
+GyaradosPicFront::    INCBIN "pic/rgmon/gyarados.pic"
+GyaradosPicBack::     INCBIN "pic/monback/gyaradosb.pic"
+ShellderPicFront::    INCBIN "pic/rgmon/shellder.pic"
+ShellderPicBack::     INCBIN "pic/monback/shellderb.pic"
+ELSE
 RhydonPicFront::      INCBIN "pic/bmon/rhydon.pic"
 RhydonPicBack::       INCBIN "pic/monback/rhydonb.pic"
 KangaskhanPicFront::  INCBIN "pic/bmon/kangaskhan.pic"
@@ -562,6 +623,91 @@ GyaradosPicFront::    INCBIN "pic/bmon/gyarados.pic"
 GyaradosPicBack::     INCBIN "pic/monback/gyaradosb.pic"
 ShellderPicFront::    INCBIN "pic/bmon/shellder.pic"
 ShellderPicBack::     INCBIN "pic/monback/shellderb.pic"
+ENDC
+
+SECTION "Battle (bank 9)", ROMX, BANK[$9]
+INCLUDE "engine/battle/print_type.asm"
+INCLUDE "engine/battle/save_trainer_name.asm"
+INCLUDE "engine/battle/moveEffects/focus_energy_effect.asm"
+
+;bank A stuff
+INCLUDE "engine/battle/moveEffects/leech_seed_effect.asm"
+
+;bank B stuff
+INCLUDE "engine/battle/moveEffects/mist_effect.asm"
+INCLUDE "engine/battle/moveEffects/one_hit_ko_effect.asm"
+
+;bank C stuff
+INCLUDE "engine/battle/display_effectiveness.asm"
+TrainerInfoTextBoxTileGraphics:  INCBIN "gfx/trainer_info.2bpp"
+TrainerInfoTextBoxTileGraphicsEnd:
+;BlankLeaderNames:                INCBIN "gfx/blank_leader_names.2bpp"
+BlankLeaderNames:                INCBIN "gfx/leader_names.2bpp"	;joenote - restoring the names
+CircleTile:                      INCBIN "gfx/circle_tile.2bpp"
+BadgeNumbersTileGraphics:        INCBIN "gfx/badge_numbers.2bpp"
+INCLUDE "engine/items/tmhm.asm"
+INCLUDE "engine/battle/scale_sprites.asm"
+INCLUDE "engine/battle/moveEffects/pay_day_effect.asm"
+INCLUDE "engine/game_corner_slots2.asm"
+
+;bank D stuff
+INCLUDE "engine/titlescreen2.asm"
+INCLUDE "engine/battle/link_battle_versus_text.asm"
+INCLUDE "engine/slot_machine.asm"
+INCLUDE "engine/overworld/pewter_guys.asm"
+INCLUDE "engine/multiply_divide.asm"
+INCLUDE "engine/game_corner_slots.asm"
+
+
+SECTION "Pics 2", ROMX, BANK[PICS_2]
+IF DEF(_REDGREENJP)
+TentacoolPicFront::   INCBIN "pic/rgmon/tentacool.pic"
+TentacoolPicBack::    INCBIN "pic/monback/tentacoolb.pic"
+GastlyPicFront::      INCBIN "pic/rgmon/gastly.pic"
+GastlyPicBack::       INCBIN "pic/monback/gastlyb.pic"
+ScytherPicFront::     INCBIN "pic/rgmon/scyther.pic"
+ScytherPicBack::      INCBIN "pic/monback/scytherb.pic"
+StaryuPicFront::      INCBIN "pic/rgmon/staryu.pic"
+StaryuPicBack::       INCBIN "pic/monback/staryub.pic"
+BlastoisePicFront::   INCBIN "pic/rgmon/blastoise.pic"
+BlastoisePicBack::    INCBIN "pic/monback/blastoiseb.pic"
+PinsirPicFront::      INCBIN "pic/rgmon/pinsir.pic"
+PinsirPicBack::       INCBIN "pic/monback/pinsirb.pic"
+TangelaPicFront::     INCBIN "pic/rgmon/tangela.pic"
+TangelaPicBack::      INCBIN "pic/monback/tangelab.pic"
+GrowlithePicFront::   INCBIN "pic/rgmon/growlithe.pic"
+GrowlithePicBack::    INCBIN "pic/monback/growlitheb.pic"
+OnixPicFront::        INCBIN "pic/rgmon/onix.pic"
+OnixPicBack::         INCBIN "pic/monback/onixb.pic"
+FearowPicFront::      INCBIN "pic/rgmon/fearow.pic"
+FearowPicBack::       INCBIN "pic/monback/fearowb.pic"
+PidgeyPicFront::      INCBIN "pic/rgmon/pidgey.pic"
+PidgeyPicBack::       INCBIN "pic/monback/pidgeyb.pic"
+SlowpokePicFront::    INCBIN "pic/rgmon/slowpoke.pic"
+SlowpokePicBack::     INCBIN "pic/monback/slowpokeb.pic"
+KadabraPicFront::     INCBIN "pic/rgmon/kadabra.pic"
+KadabraPicBack::      INCBIN "pic/monback/kadabrab.pic"
+GravelerPicFront::    INCBIN "pic/rgmon/graveler.pic"
+GravelerPicBack::     INCBIN "pic/monback/gravelerb.pic"
+ChanseyPicFront::     INCBIN "pic/rgmon/chansey.pic"
+ChanseyPicBack::      INCBIN "pic/monback/chanseyb.pic"
+MachokePicFront::     INCBIN "pic/rgmon/machoke.pic"
+MachokePicBack::      INCBIN "pic/monback/machokeb.pic"
+MrMimePicFront::      INCBIN "pic/rgmon/mr.mime.pic"
+MrMimePicBack::       INCBIN "pic/monback/mr.mimeb.pic"
+HitmonleePicFront::   INCBIN "pic/rgmon/hitmonlee.pic"
+HitmonleePicBack::    INCBIN "pic/monback/hitmonleeb.pic"
+HitmonchanPicFront::  INCBIN "pic/rgmon/hitmonchan.pic"
+HitmonchanPicBack::   INCBIN "pic/monback/hitmonchanb.pic"
+ArbokPicFront::       INCBIN "pic/rgmon/arbok.pic"
+ArbokPicBack::        INCBIN "pic/monback/arbokb.pic"
+ParasectPicFront::    INCBIN "pic/rgmon/parasect.pic"
+ParasectPicBack::     INCBIN "pic/monback/parasectb.pic"
+PsyduckPicFront::     INCBIN "pic/rgmon/psyduck.pic"
+PsyduckPicBack::      INCBIN "pic/monback/psyduckb.pic"
+DrowzeePicFront::     INCBIN "pic/rgmon/drowzee.pic"
+DrowzeePicBack::      INCBIN "pic/monback/drowzeeb.pic"
+ELSE
 TentacoolPicFront::   INCBIN "pic/bmon/tentacool.pic"
 TentacoolPicBack::    INCBIN "pic/monback/tentacoolb.pic"
 GastlyPicFront::      INCBIN "pic/bmon/gastly.pic"
@@ -576,16 +722,6 @@ PinsirPicFront::      INCBIN "pic/bmon/pinsir.pic"
 PinsirPicBack::       INCBIN "pic/monback/pinsirb.pic"
 TangelaPicFront::     INCBIN "pic/bmon/tangela.pic"
 TangelaPicBack::      INCBIN "pic/monback/tangelab.pic"
-
-
-SECTION "Battle (bank 9)", ROMX, BANK[$9]
-INCLUDE "engine/battle/print_type.asm"
-INCLUDE "engine/battle/save_trainer_name.asm"
-INCLUDE "engine/battle/moveEffects/focus_energy_effect.asm"
-
-
-SECTION "Pics 2", ROMX, BANK[PICS_2]
-
 GrowlithePicFront::   INCBIN "pic/bmon/growlithe.pic"
 GrowlithePicBack::    INCBIN "pic/monback/growlitheb.pic"
 OnixPicFront::        INCBIN "pic/bmon/onix.pic"
@@ -618,6 +754,60 @@ PsyduckPicFront::     INCBIN "pic/bmon/psyduck.pic"
 PsyduckPicBack::      INCBIN "pic/monback/psyduckb.pic"
 DrowzeePicFront::     INCBIN "pic/bmon/drowzee.pic"
 DrowzeePicBack::      INCBIN "pic/monback/drowzeeb.pic"
+ENDC
+
+SECTION "Battle (bank A)", ROMX, BANK[$A]
+;migrated content to bank 9
+
+SECTION "Pics 3", ROMX, BANK[PICS_3]
+IF DEF(_REDGREENJP)
+GolemPicFront::       INCBIN "pic/rgmon/golem.pic"
+GolemPicBack::        INCBIN "pic/monback/golemb.pic"
+MagmarPicFront::      INCBIN "pic/rgmon/magmar.pic"
+MagmarPicBack::       INCBIN "pic/monback/magmarb.pic"
+ElectabuzzPicFront::  INCBIN "pic/rgmon/electabuzz.pic"
+ElectabuzzPicBack::   INCBIN "pic/monback/electabuzzb.pic"
+MagnetonPicFront::    INCBIN "pic/rgmon/magneton.pic"
+MagnetonPicBack::     INCBIN "pic/monback/magnetonb.pic"
+KoffingPicFront::     INCBIN "pic/rgmon/koffing.pic"
+KoffingPicBack::      INCBIN "pic/monback/koffingb.pic"
+MankeyPicFront::      INCBIN "pic/rgmon/mankey.pic"
+MankeyPicBack::       INCBIN "pic/monback/mankeyb.pic"
+SeelPicFront::        INCBIN "pic/rgmon/seel.pic"
+SeelPicBack::         INCBIN "pic/monback/seelb.pic"
+DiglettPicFront::     INCBIN "pic/rgmon/diglett.pic"
+DiglettPicBack::      INCBIN "pic/monback/diglettb.pic"
+TaurosPicFront::      INCBIN "pic/rgmon/tauros.pic"
+TaurosPicBack::       INCBIN "pic/monback/taurosb.pic"
+FarfetchdPicFront::   INCBIN "pic/rgmon/farfetchd.pic"
+FarfetchdPicBack::    INCBIN "pic/monback/farfetchdb.pic"
+VenonatPicFront::     INCBIN "pic/rgmon/venonat.pic"
+VenonatPicBack::      INCBIN "pic/monback/venonatb.pic"
+DragonitePicFront::   INCBIN "pic/rgmon/dragonite.pic"
+DragonitePicBack::    INCBIN "pic/monback/dragoniteb.pic"
+DoduoPicFront::       INCBIN "pic/rgmon/doduo.pic"
+DoduoPicBack::        INCBIN "pic/monback/doduob.pic"
+PoliwagPicFront::     INCBIN "pic/rgmon/poliwag.pic"
+PoliwagPicBack::      INCBIN "pic/monback/poliwagb.pic"
+JynxPicFront::        INCBIN "pic/rgmon/jynx.pic"
+JynxPicBack::         INCBIN "pic/monback/jynxb.pic"
+MoltresPicFront::     INCBIN "pic/rgmon/moltres.pic"
+MoltresPicBack::      INCBIN "pic/monback/moltresb.pic"
+ArticunoPicFront::    INCBIN "pic/rgmon/articuno.pic"
+ArticunoPicBack::     INCBIN "pic/monback/articunob.pic"
+ZapdosPicFront::      INCBIN "pic/rgmon/zapdos.pic"
+ZapdosPicBack::       INCBIN "pic/monback/zapdosb.pic"
+DittoPicFront::       INCBIN "pic/rgmon/ditto.pic"
+DittoPicBack::        INCBIN "pic/monback/dittob.pic"
+MeowthPicFront::      INCBIN "pic/rgmon/meowth.pic"
+MeowthPicBack::       INCBIN "pic/monback/meowthb.pic"
+KrabbyPicFront::      INCBIN "pic/rgmon/krabby.pic"
+KrabbyPicBack::       INCBIN "pic/monback/krabbyb.pic"
+VulpixPicFront::      INCBIN "pic/rgmon/vulpix.pic"
+VulpixPicBack::       INCBIN "pic/monback/vulpixb.pic"
+NinetalesPicFront::   INCBIN "pic/rgmon/ninetales.pic"
+NinetalesPicBack::    INCBIN "pic/monback/ninetalesb.pic"
+ELSE
 GolemPicFront::       INCBIN "pic/bmon/golem.pic"
 GolemPicBack::        INCBIN "pic/monback/golemb.pic"
 MagmarPicFront::      INCBIN "pic/bmon/magmar.pic"
@@ -650,14 +840,6 @@ JynxPicFront::        INCBIN "pic/bmon/jynx.pic"
 JynxPicBack::         INCBIN "pic/monback/jynxb.pic"
 MoltresPicFront::     INCBIN "pic/bmon/moltres.pic"
 MoltresPicBack::      INCBIN "pic/monback/moltresb.pic"
-
-
-SECTION "Battle (bank A)", ROMX, BANK[$A]
-INCLUDE "engine/battle/moveEffects/leech_seed_effect.asm"
-
-
-SECTION "Pics 3", ROMX, BANK[PICS_3]
-
 ArticunoPicFront::    INCBIN "pic/bmon/articuno.pic"
 ArticunoPicBack::     INCBIN "pic/monback/articunob.pic"
 ZapdosPicFront::      INCBIN "pic/bmon/zapdos.pic"
@@ -672,6 +854,66 @@ VulpixPicFront::      INCBIN "pic/bmon/vulpix.pic"
 VulpixPicBack::       INCBIN "pic/monback/vulpixb.pic"
 NinetalesPicFront::   INCBIN "pic/bmon/ninetales.pic"
 NinetalesPicBack::    INCBIN "pic/monback/ninetalesb.pic"
+ENDC
+
+SECTION "Battle (bank B)", ROMX, BANK[$B]
+;migrated content to bank 9
+
+SECTION "Pics 4", ROMX, BANK[PICS_4]
+IF DEF(_REDGREENJP)
+PikachuPicFront::     INCBIN "pic/rgmon/pikachu.pic"
+PikachuPicBack::      INCBIN "pic/monback/pikachub.pic"
+RaichuPicFront::      INCBIN "pic/rgmon/raichu.pic"
+RaichuPicBack::       INCBIN "pic/monback/raichub.pic"
+DratiniPicFront::     INCBIN "pic/rgmon/dratini.pic"
+DratiniPicBack::      INCBIN "pic/monback/dratinib.pic"
+DragonairPicFront::   INCBIN "pic/rgmon/dragonair.pic"
+DragonairPicBack::    INCBIN "pic/monback/dragonairb.pic"
+KabutoPicFront::      INCBIN "pic/rgmon/kabuto.pic"
+KabutoPicBack::       INCBIN "pic/monback/kabutob.pic"
+KabutopsPicFront::    INCBIN "pic/rgmon/kabutops.pic"
+KabutopsPicBack::     INCBIN "pic/monback/kabutopsb.pic"
+HorseaPicFront::      INCBIN "pic/rgmon/horsea.pic"
+HorseaPicBack::       INCBIN "pic/monback/horseab.pic"
+SeadraPicFront::      INCBIN "pic/rgmon/seadra.pic"
+SeadraPicBack::       INCBIN "pic/monback/seadrab.pic"
+SandshrewPicFront::   INCBIN "pic/rgmon/sandshrew.pic"
+SandshrewPicBack::    INCBIN "pic/monback/sandshrewb.pic"
+SandslashPicFront::   INCBIN "pic/rgmon/sandslash.pic"
+SandslashPicBack::    INCBIN "pic/monback/sandslashb.pic"
+OmanytePicFront::     INCBIN "pic/rgmon/omanyte.pic"
+OmanytePicBack::      INCBIN "pic/monback/omanyteb.pic"
+OmastarPicFront::     INCBIN "pic/rgmon/omastar.pic"
+OmastarPicBack::      INCBIN "pic/monback/omastarb.pic"
+JigglypuffPicFront::  INCBIN "pic/rgmon/jigglypuff.pic"
+JigglypuffPicBack::   INCBIN "pic/monback/jigglypuffb.pic"
+WigglytuffPicFront::  INCBIN "pic/rgmon/wigglytuff.pic"
+WigglytuffPicBack::   INCBIN "pic/monback/wigglytuffb.pic"
+EeveePicFront::       INCBIN "pic/rgmon/eevee.pic"
+EeveePicBack::        INCBIN "pic/monback/eeveeb.pic"
+FlareonPicFront::     INCBIN "pic/rgmon/flareon.pic"
+FlareonPicBack::      INCBIN "pic/monback/flareonb.pic"
+JolteonPicFront::     INCBIN "pic/rgmon/jolteon.pic"
+JolteonPicBack::      INCBIN "pic/monback/jolteonb.pic"
+VaporeonPicFront::    INCBIN "pic/rgmon/vaporeon.pic"
+VaporeonPicBack::     INCBIN "pic/monback/vaporeonb.pic"
+MachopPicFront::      INCBIN "pic/rgmon/machop.pic"
+MachopPicBack::       INCBIN "pic/monback/machopb.pic"
+ZubatPicFront::       INCBIN "pic/rgmon/zubat.pic"
+ZubatPicBack::        INCBIN "pic/monback/zubatb.pic"
+EkansPicFront::       INCBIN "pic/rgmon/ekans.pic"
+EkansPicBack::        INCBIN "pic/monback/ekansb.pic"
+ParasPicFront::       INCBIN "pic/rgmon/paras.pic"
+ParasPicBack::        INCBIN "pic/monback/parasb.pic"
+PoliwhirlPicFront::   INCBIN "pic/rgmon/poliwhirl.pic"
+PoliwhirlPicBack::    INCBIN "pic/monback/poliwhirlb.pic"
+PoliwrathPicFront::   INCBIN "pic/rgmon/poliwrath.pic"
+PoliwrathPicBack::    INCBIN "pic/monback/poliwrathb.pic"
+WeedlePicFront::      INCBIN "pic/rgmon/weedle.pic"
+WeedlePicBack::       INCBIN "pic/monback/weedleb.pic"
+KakunaPicFront::      INCBIN "pic/rgmon/kakuna.pic"
+KakunaPicBack::       INCBIN "pic/monback/kakunab.pic"
+ELSE
 PikachuPicFront::     INCBIN "pic/bmon/pikachu.pic"
 PikachuPicBack::      INCBIN "pic/monback/pikachub.pic"
 RaichuPicFront::      INCBIN "pic/bmon/raichu.pic"
@@ -724,30 +966,58 @@ WeedlePicFront::      INCBIN "pic/bmon/weedle.pic"
 WeedlePicBack::       INCBIN "pic/monback/weedleb.pic"
 KakunaPicFront::      INCBIN "pic/bmon/kakuna.pic"
 KakunaPicBack::       INCBIN "pic/monback/kakunab.pic"
+ENDC
+
+SECTION "Battle (bank C)", ROMX, BANK[$C]
+;migrated content to bank 9
+
+SECTION "Pics 5", ROMX, BANK[PICS_5]
+IF DEF(_REDGREENJP)
+BeedrillPicFront::    INCBIN "pic/rgmon/beedrill.pic"
+BeedrillPicBack::     INCBIN "pic/monback/beedrillb.pic"
+DodrioPicFront::       INCBIN "pic/rgmon/dodrio.pic"
+DodrioPicBack::        INCBIN "pic/monback/dodriob.pic"
+PrimeapePicFront::     INCBIN "pic/rgmon/primeape.pic"
+PrimeapePicBack::      INCBIN "pic/monback/primeapeb.pic"
+DugtrioPicFront::      INCBIN "pic/rgmon/dugtrio.pic"
+DugtrioPicBack::       INCBIN "pic/monback/dugtriob.pic"
+VenomothPicFront::     INCBIN "pic/rgmon/venomoth.pic"
+VenomothPicBack::      INCBIN "pic/monback/venomothb.pic"
+DewgongPicFront::      INCBIN "pic/rgmon/dewgong.pic"
+DewgongPicBack::       INCBIN "pic/monback/dewgongb.pic"
+CaterpiePicFront::     INCBIN "pic/rgmon/caterpie.pic"
+CaterpiePicBack::      INCBIN "pic/monback/caterpieb.pic"
+MetapodPicFront::      INCBIN "pic/rgmon/metapod.pic"
+MetapodPicBack::       INCBIN "pic/monback/metapodb.pic"
+ButterfreePicFront::   INCBIN "pic/rgmon/butterfree.pic"
+ButterfreePicBack::    INCBIN "pic/monback/butterfreeb.pic"
+MachampPicFront::      INCBIN "pic/rgmon/machamp.pic"
+MachampPicBack::       INCBIN "pic/monback/machampb.pic"
+GolduckPicFront::      INCBIN "pic/rgmon/golduck.pic"
+GolduckPicBack::       INCBIN "pic/monback/golduckb.pic"
+HypnoPicFront::        INCBIN "pic/rgmon/hypno.pic"
+HypnoPicBack::         INCBIN "pic/monback/hypnob.pic"
+GolbatPicFront::       INCBIN "pic/rgmon/golbat.pic"
+GolbatPicBack::        INCBIN "pic/monback/golbatb.pic"
+MewtwoPicFront::       INCBIN "pic/rgmon/mewtwo.pic"
+MewtwoPicBack::        INCBIN "pic/monback/mewtwob.pic"
+SnorlaxPicFront::      INCBIN "pic/rgmon/snorlax.pic"
+SnorlaxPicBack::       INCBIN "pic/monback/snorlaxb.pic"
+MagikarpPicFront::     INCBIN "pic/rgmon/magikarp.pic"
+MagikarpPicBack::      INCBIN "pic/monback/magikarpb.pic"
+MukPicFront::          INCBIN "pic/rgmon/muk.pic"
+MukPicBack::           INCBIN "pic/monback/mukb.pic"
+KinglerPicFront::      INCBIN "pic/rgmon/kingler.pic"
+KinglerPicBack::       INCBIN "pic/monback/kinglerb.pic"
+CloysterPicFront::     INCBIN "pic/rgmon/cloyster.pic"
+CloysterPicBack::      INCBIN "pic/monback/cloysterb.pic"
+ElectrodePicFront::    INCBIN "pic/rgmon/electrode.pic"
+ElectrodePicBack::     INCBIN "pic/monback/electrodeb.pic"
+ClefablePicFront::     INCBIN "pic/rgmon/clefable.pic"
+ClefablePicBack::      INCBIN "pic/monback/clefableb.pic"
+ELSE
 BeedrillPicFront::    INCBIN "pic/bmon/beedrill.pic"
 BeedrillPicBack::     INCBIN "pic/monback/beedrillb.pic"
-
-FossilKabutopsPic::   INCBIN "pic/bmon/fossilkabutops.pic"
-
-
-SECTION "Battle (bank B)", ROMX, BANK[$B]
-
-INCLUDE "engine/battle/display_effectiveness.asm"
-
-TrainerInfoTextBoxTileGraphics:  INCBIN "gfx/trainer_info.2bpp"
-TrainerInfoTextBoxTileGraphicsEnd:
-BlankLeaderNames:                INCBIN "gfx/blank_leader_names.2bpp"
-CircleTile:                      INCBIN "gfx/circle_tile.2bpp"
-BadgeNumbersTileGraphics:        INCBIN "gfx/badge_numbers.2bpp"
-
-INCLUDE "engine/items/tmhm.asm"
-INCLUDE "engine/battle/scale_sprites.asm"
-INCLUDE "engine/battle/moveEffects/pay_day_effect.asm"
-INCLUDE "engine/game_corner_slots2.asm"
-
-
-SECTION "Pics 4", ROMX, BANK[PICS_4]
-
 DodrioPicFront::       INCBIN "pic/bmon/dodrio.pic"
 DodrioPicBack::        INCBIN "pic/monback/dodriob.pic"
 PrimeapePicFront::     INCBIN "pic/bmon/primeape.pic"
@@ -788,6 +1058,55 @@ ElectrodePicFront::    INCBIN "pic/bmon/electrode.pic"
 ElectrodePicBack::     INCBIN "pic/monback/electrodeb.pic"
 ClefablePicFront::     INCBIN "pic/bmon/clefable.pic"
 ClefablePicBack::      INCBIN "pic/monback/clefableb.pic"
+ENDC
+
+SECTION "Pics 6", ROMX, BANK[PICS_6]
+IF DEF(_REDGREENJP)
+WeezingPicFront::      INCBIN "pic/rgmon/weezing.pic"
+WeezingPicBack::       INCBIN "pic/monback/weezingb.pic"
+PersianPicFront::      INCBIN "pic/rgmon/persian.pic"
+PersianPicBack::       INCBIN "pic/monback/persianb.pic"
+MarowakPicFront::      INCBIN "pic/rgmon/marowak.pic"
+MarowakPicBack::       INCBIN "pic/monback/marowakb.pic"
+HaunterPicFront::      INCBIN "pic/rgmon/haunter.pic"
+HaunterPicBack::       INCBIN "pic/monback/haunterb.pic"
+AbraPicFront::         INCBIN "pic/rgmon/abra.pic"
+AbraPicBack::          INCBIN "pic/monback/abrab.pic"
+AlakazamPicFront::     INCBIN "pic/rgmon/alakazam.pic"
+AlakazamPicBack::      INCBIN "pic/monback/alakazamb.pic"
+PidgeottoPicFront::    INCBIN "pic/rgmon/pidgeotto.pic"
+PidgeottoPicBack::     INCBIN "pic/monback/pidgeottob.pic"
+PidgeotPicFront::      INCBIN "pic/rgmon/pidgeot.pic"
+PidgeotPicBack::       INCBIN "pic/monback/pidgeotb.pic"
+StarmiePicFront::      INCBIN "pic/rgmon/starmie.pic"
+StarmiePicBack::       INCBIN "pic/monback/starmieb.pic"
+BulbasaurPicFront::    INCBIN "pic/rgmon/bulbasaur.pic"
+BulbasaurPicBack::     INCBIN "pic/monback/bulbasaurb.pic"
+VenusaurPicFront::     INCBIN "pic/rgmon/venusaur.pic"
+VenusaurPicBack::      INCBIN "pic/monback/venusaurb.pic"
+TentacruelPicFront::   INCBIN "pic/rgmon/tentacruel.pic"
+TentacruelPicBack::    INCBIN "pic/monback/tentacruelb.pic"
+GoldeenPicFront::      INCBIN "pic/rgmon/goldeen.pic"
+GoldeenPicBack::       INCBIN "pic/monback/goldeenb.pic"
+SeakingPicFront::      INCBIN "pic/rgmon/seaking.pic"
+SeakingPicBack::       INCBIN "pic/monback/seakingb.pic"
+PonytaPicFront::       INCBIN "pic/rgmon/ponyta.pic"
+RapidashPicFront::     INCBIN "pic/rgmon/rapidash.pic"
+PonytaPicBack::        INCBIN "pic/monback/ponytab.pic"
+RapidashPicBack::      INCBIN "pic/monback/rapidashb.pic"
+RattataPicFront::      INCBIN "pic/rgmon/rattata.pic"
+RattataPicBack::       INCBIN "pic/monback/rattatab.pic"
+RaticatePicFront::     INCBIN "pic/rgmon/raticate.pic"
+RaticatePicBack::      INCBIN "pic/monback/raticateb.pic"
+NidorinoPicFront::     INCBIN "pic/rgmon/nidorino.pic"
+NidorinoPicBack::      INCBIN "pic/monback/nidorinob.pic"
+NidorinaPicFront::     INCBIN "pic/rgmon/nidorina.pic"
+NidorinaPicBack::      INCBIN "pic/monback/nidorinab.pic"
+GeodudePicFront::      INCBIN "pic/rgmon/geodude.pic"
+GeodudePicBack::       INCBIN "pic/monback/geodudeb.pic"
+PorygonPicFront::      INCBIN "pic/rgmon/porygon.pic"
+PorygonPicBack::       INCBIN "pic/monback/porygonb.pic"
+ELSE
 WeezingPicFront::      INCBIN "pic/bmon/weezing.pic"
 WeezingPicBack::       INCBIN "pic/monback/weezingb.pic"
 PersianPicFront::      INCBIN "pic/bmon/persian.pic"
@@ -806,18 +1125,6 @@ PidgeotPicFront::      INCBIN "pic/bmon/pidgeot.pic"
 PidgeotPicBack::       INCBIN "pic/monback/pidgeotb.pic"
 StarmiePicFront::      INCBIN "pic/bmon/starmie.pic"
 StarmiePicBack::       INCBIN "pic/monback/starmieb.pic"
-
-RedPicBack::           INCBIN "pic/trainer/redb.pic"
-OldManPic::            INCBIN "pic/trainer/oldman.pic"
-
-
-SECTION "Battle (bank C)", ROMX, BANK[$C]
-INCLUDE "engine/battle/moveEffects/mist_effect.asm"
-INCLUDE "engine/battle/moveEffects/one_hit_ko_effect.asm"
-
-
-SECTION "Pics 5", ROMX, BANK[PICS_5]
-
 BulbasaurPicFront::    INCBIN "pic/bmon/bulbasaur.pic"
 BulbasaurPicBack::     INCBIN "pic/monback/bulbasaurb.pic"
 VenusaurPicFront::     INCBIN "pic/bmon/venusaur.pic"
@@ -844,6 +1151,42 @@ GeodudePicFront::      INCBIN "pic/bmon/geodude.pic"
 GeodudePicBack::       INCBIN "pic/monback/geodudeb.pic"
 PorygonPicFront::      INCBIN "pic/bmon/porygon.pic"
 PorygonPicBack::       INCBIN "pic/monback/porygonb.pic"
+ENDC
+
+SECTION "Pics 7", ROMX, BANK[PICS_7]
+IF DEF(_REDGREENJP)
+AerodactylPicFront::   INCBIN "pic/rgmon/aerodactyl.pic"
+AerodactylPicBack::    INCBIN "pic/monback/aerodactylb.pic"
+MagnemitePicFront::    INCBIN "pic/rgmon/magnemite.pic"
+MagnemitePicBack::     INCBIN "pic/monback/magnemiteb.pic"
+CharmanderPicFront::   INCBIN "pic/rgmon/charmander.pic"
+CharmanderPicBack::    INCBIN "pic/monback/charmanderb.pic"
+SquirtlePicFront::     INCBIN "pic/rgmon/squirtle.pic"
+SquirtlePicBack::      INCBIN "pic/monback/squirtleb.pic"
+CharmeleonPicFront::   INCBIN "pic/rgmon/charmeleon.pic"
+CharmeleonPicBack::    INCBIN "pic/monback/charmeleonb.pic"
+WartortlePicFront::    INCBIN "pic/rgmon/wartortle.pic"
+WartortlePicBack::     INCBIN "pic/monback/wartortleb.pic"
+CharizardPicFront::    INCBIN "pic/rgmon/charizard.pic"
+CharizardPicBack::     INCBIN "pic/monback/charizardb.pic"
+FossilKabutopsPic::    INCBIN "pic/other/fossilkabutops.pic"
+FossilAerodactylPic::  INCBIN "pic/other/fossilaerodactyl.pic"
+GhostPic::             INCBIN "pic/other/ghost.pic"
+OddishPicFront::       INCBIN "pic/rgmon/oddish.pic"
+OddishPicBack::        INCBIN "pic/monback/oddishb.pic"
+GloomPicFront::        INCBIN "pic/rgmon/gloom.pic"
+GloomPicBack::         INCBIN "pic/monback/gloomb.pic"
+VileplumePicFront::    INCBIN "pic/rgmon/vileplume.pic"
+VileplumePicBack::     INCBIN "pic/monback/vileplumeb.pic"
+BellsproutPicFront::   INCBIN "pic/rgmon/bellsprout.pic"
+BellsproutPicBack::    INCBIN "pic/monback/bellsproutb.pic"
+WeepinbellPicFront::   INCBIN "pic/rgmon/weepinbell.pic"
+WeepinbellPicBack::    INCBIN "pic/monback/weepinbellb.pic"
+VictreebelPicFront::   INCBIN "pic/rgmon/victreebel.pic"
+VictreebelPicBack::    INCBIN "pic/monback/victreebelb.pic"
+MewPicFront:: 		   INCBIN "pic/rgmon/mew.pic"
+MewPicBack::  		   INCBIN "pic/monback/mewb.pic"
+ELSE
 AerodactylPicFront::   INCBIN "pic/bmon/aerodactyl.pic"
 AerodactylPicBack::    INCBIN "pic/monback/aerodactylb.pic"
 MagnemitePicFront::    INCBIN "pic/bmon/magnemite.pic"
@@ -858,7 +1201,8 @@ WartortlePicFront::    INCBIN "pic/bmon/wartortle.pic"
 WartortlePicBack::     INCBIN "pic/monback/wartortleb.pic"
 CharizardPicFront::    INCBIN "pic/bmon/charizard.pic"
 CharizardPicBack::     INCBIN "pic/monback/charizardb.pic"
-FossilAerodactylPic::  INCBIN "pic/bmon/fossilaerodactyl.pic"
+FossilKabutopsPic::    INCBIN "pic/other/fossilkabutops.pic"
+FossilAerodactylPic::  INCBIN "pic/other/fossilaerodactyl.pic"
 GhostPic::             INCBIN "pic/other/ghost.pic"
 OddishPicFront::       INCBIN "pic/bmon/oddish.pic"
 OddishPicBack::        INCBIN "pic/monback/oddishb.pic"
@@ -872,36 +1216,35 @@ WeepinbellPicFront::   INCBIN "pic/bmon/weepinbell.pic"
 WeepinbellPicBack::    INCBIN "pic/monback/weepinbellb.pic"
 VictreebelPicFront::   INCBIN "pic/bmon/victreebel.pic"
 VictreebelPicBack::    INCBIN "pic/monback/victreebelb.pic"
-
+MewPicFront:: 		   INCBIN "pic/bmon/mew.pic"
+MewPicBack::  		   INCBIN "pic/monback/mewb.pic"
+ENDC
+RedPicBack::           INCBIN "pic/trainer/redb.pic"
+OldManPic::            INCBIN "pic/trainer/oldman.pic"
+MissingnoPic::         INCBIN "pic/other/missingno.pic"
 
 SECTION "Battle (bank D)", ROMX, BANK[$D]
-
-INCLUDE "engine/titlescreen2.asm"
-INCLUDE "engine/battle/link_battle_versus_text.asm"
-INCLUDE "engine/slot_machine.asm"
-INCLUDE "engine/overworld/pewter_guys.asm"
-INCLUDE "engine/multiply_divide.asm"
-INCLUDE "engine/game_corner_slots.asm"
-
+;migrated content to bank 9
 
 SECTION "bankE",ROMX,BANK[$E]
 
 INCLUDE "data/moves.asm"
 BaseStats: INCLUDE "data/base_stats.asm"
 INCLUDE "data/cries.asm"
-INCLUDE "engine/battle/unused_stats_functions.asm"
+;INCLUDE "engine/battle/unused_stats_functions.asm" ;joenote - putting this back into use and moving to bank 2d
 INCLUDE "engine/battle/scroll_draw_trainer_pic.asm"
 INCLUDE "engine/battle/trainer_ai.asm"
 INCLUDE "engine/battle/draw_hud_pokeball_gfx.asm"
 
-TradingAnimationGraphics:
-INCBIN "gfx/game_boy.2bpp"
-INCBIN "gfx/link_cable.2bpp"
-TradingAnimationGraphicsEnd:
+;joenote - moved trading graphics to empty bank
+;TradingAnimationGraphics:
+;INCBIN "gfx/game_boy.2bpp"
+;INCBIN "gfx/link_cable.2bpp"
+;TradingAnimationGraphicsEnd:
 
-; Pokeball traveling through the link cable.
-TradingAnimationGraphics2: INCBIN "gfx/trade2.2bpp"
-TradingAnimationGraphics2End:
+;; Pokeball traveling through the link cable.
+;TradingAnimationGraphics2: INCBIN "gfx/trade2.2bpp"
+;TradingAnimationGraphics2End:
 
 INCLUDE "engine/evos_moves.asm"
 INCLUDE "engine/battle/moveEffects/heal_effect.asm"
@@ -1032,12 +1375,20 @@ INCLUDE "data/mapObjects/safarizoneresthouse4.asm"
 INCLUDE "data/mapHeaders/unknowndungeon2.asm"
 INCLUDE "scripts/unknowndungeon2.asm"
 INCLUDE "data/mapObjects/unknowndungeon2.asm"
+IF DEF(_REDGREENJP)
+UnknownDungeon2Blocks: INCBIN "maps/green/unknowndungeon2.blk"
+ELSE
 UnknownDungeon2Blocks: INCBIN "maps/unknowndungeon2.blk"
+ENDC
 
 INCLUDE "data/mapHeaders/unknowndungeon3.asm"
 INCLUDE "scripts/unknowndungeon3.asm"
 INCLUDE "data/mapObjects/unknowndungeon3.asm"
+IF DEF(_REDGREENJP)
+UnknownDungeon3Blocks: INCBIN "maps/green/unknowndungeon3.blk"
+ELSE
 UnknownDungeon3Blocks: INCBIN "maps/unknowndungeon3.blk"
+ENDC
 
 INCLUDE "data/mapHeaders/rocktunnel2.asm"
 INCLUDE "scripts/rocktunnel2.asm"
@@ -1274,7 +1625,7 @@ BirdKeeperPic::    INCBIN "pic/trainer/birdkeeper.pic"
 BlackbeltPic::     INCBIN "pic/trainer/blackbelt.pic"
 Rival1Pic::        INCBIN "pic/trainer/rival1.pic"
 ProfOakPic::       INCBIN "pic/trainer/prof.oak.pic"
-ChiefPic::
+ChiefPic::		   ;INCBIN "pic/trainer/chief.pic"	;joenote - not enough rom space
 ScientistPic::     INCBIN "pic/trainer/scientist.pic"
 GiovanniPic::      INCBIN "pic/trainer/giovanni.pic"
 RocketPic::        INCBIN "pic/trainer/rocket.pic"
@@ -1284,7 +1635,7 @@ BrunoPic::         INCBIN "pic/trainer/bruno.pic"
 BrockPic::         INCBIN "pic/trainer/brock.pic"
 MistyPic::         INCBIN "pic/trainer/misty.pic"
 LtSurgePic::       INCBIN "pic/trainer/lt.surge.pic"
-ErikaPic::         INCBIN "pic/trainer/erika.pic"
+ErikaPic::         INCBIN "pic/ytrainer/erika.pic"	;joenote - use her yellow sprite to ditch the funerary clothes
 KogaPic::          INCBIN "pic/trainer/koga.pic"
 BlainePic::        INCBIN "pic/trainer/blaine.pic"
 SabrinaPic::       INCBIN "pic/trainer/sabrina.pic"
@@ -1296,19 +1647,20 @@ ChannelerPic::     INCBIN "pic/trainer/channeler.pic"
 AgathaPic::        INCBIN "pic/trainer/agatha.pic"
 LancePic::         INCBIN "pic/trainer/lance.pic"
 
-INCLUDE "data/mapHeaders/tradecenter.asm"
-INCLUDE "scripts/tradecenter.asm"
-INCLUDE "data/mapObjects/tradecenter.asm"
-TradeCenterBlocks: INCBIN "maps/tradecenter.blk"
+;joenote - moved to a different bank
+;INCLUDE "data/mapHeaders/tradecenter.asm"
+;INCLUDE "scripts/tradecenter.asm"
+;INCLUDE "data/mapObjects/tradecenter.asm"
+;TradeCenterBlocks: INCBIN "maps/tradecenter.blk"
 
-INCLUDE "data/mapHeaders/colosseum.asm"
-INCLUDE "scripts/colosseum.asm"
-INCLUDE "data/mapObjects/colosseum.asm"
-ColosseumBlocks: INCBIN "maps/colosseum.blk"
+;INCLUDE "data/mapHeaders/colosseum.asm"
+;INCLUDE "scripts/colosseum.asm"
+;INCLUDE "data/mapObjects/colosseum.asm"
+;ColosseumBlocks: INCBIN "maps/colosseum.blk"
 
-INCLUDE "engine/give_pokemon.asm"
+;INCLUDE "engine/give_pokemon.asm"
 
-INCLUDE "engine/predefs.asm"
+;INCLUDE "engine/predefs.asm"
 
 
 SECTION "bank14",ROMX,BANK[$14]
@@ -1841,12 +2193,31 @@ INCLUDE "scripts/silphco11.asm"
 INCLUDE "data/mapObjects/silphco11.asm"
 SilphCo11Blocks: INCBIN "maps/silphco11.blk"
 
+;joenote - moved these here
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INCLUDE "data/mapHeaders/tradecenter.asm"
+INCLUDE "scripts/tradecenter.asm"
+INCLUDE "data/mapObjects/tradecenter.asm"
+TradeCenterBlocks: INCBIN "maps/tradecenter.blk"
+
+INCLUDE "data/mapHeaders/colosseum.asm"
+INCLUDE "scripts/colosseum.asm"
+INCLUDE "data/mapObjects/colosseum.asm"
+ColosseumBlocks: INCBIN "maps/colosseum.blk"
+
+INCLUDE "engine/give_pokemon.asm"
+
+INCLUDE "engine/predefs.asm"
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 INCLUDE "engine/hidden_object_functions18.asm"
 
 
 SECTION "bank19",ROMX,BANK[$19]
-
+IF DEF(_REDGREENJP)
+Overworld_GFX:     INCBIN "gfx/tilesets/green/overworld.2bpp"
+ELSE
 Overworld_GFX:     INCBIN "gfx/tilesets/overworld.2bpp"
+ENDC
 Overworld_Block:   INCBIN "gfx/blocksets/overworld.bst"
 
 RedsHouse1_GFX:
@@ -1872,10 +2243,13 @@ SECTION "bank1A",ROMX,BANK[$1A]
 INCLUDE "engine/battle/decrement_pp.asm"
 
 Version_GFX:
-IF DEF(_RED)
+IF DEF(_REDJP)
+	INCBIN "gfx/red/redgreenversionjp.1bpp" ; 10 tiles
+ELIF (DEF(_RED) || DEF(_GREEN))
 	INCBIN "gfx/red/redgreenversion.1bpp" ; 10 tiles
-ENDC
-IF DEF(_BLUE)
+ELIF DEF(_BLUEJP)
+	INCBIN "gfx/blue/blueversionjp.1bpp" ; 8 tiles
+ELIF DEF(_BLUE)
 	INCBIN "gfx/blue/blueversion.1bpp" ; 8 tiles
 ENDC
 Version_GFXEnd:
@@ -1897,7 +2271,11 @@ ForestGate_Block:
 Museum_Block:
 Gate_Block:        INCBIN "gfx/blocksets/gate.bst"
 
+IF DEF(_REDGREENJP)
+Forest_GFX:        INCBIN "gfx/tilesets/green/forest.2bpp"
+ELSE
 Forest_GFX:        INCBIN "gfx/tilesets/forest.2bpp"
+ENDC
 Forest_Block:      INCBIN "gfx/blocksets/forest.bst"
 Facility_GFX:      INCBIN "gfx/tilesets/facility.2bpp"
 Facility_Block:    INCBIN "gfx/blocksets/facility.bst"
@@ -1923,13 +2301,20 @@ Underground_Block: INCBIN "gfx/blocksets/underground.bst"
 
 SECTION "bank1C",ROMX,BANK[$1C]
 
-INCLUDE "engine/gamefreak.asm"
+;INCLUDE "engine/gamefreak.asm"	;gbcnote - moved to another bank to make space
 INCLUDE "engine/hall_of_fame.asm"
 INCLUDE "engine/overworld/healing_machine.asm"
 INCLUDE "engine/overworld/player_animations.asm"
 INCLUDE "engine/battle/ghost_marowak_anim.asm"
 INCLUDE "engine/battle/battle_transitions.asm"
+
+;joenote - Implement the japanese map layout based on Rangi's Red/Blue Star project
+IF (DEF(_REDGREENJP) || DEF(_BLUEJP))
+INCLUDE "engine/town_map_jp.asm"
+ELSE
 INCLUDE "engine/town_map.asm"
+ENDC
+
 INCLUDE "engine/mon_party_sprites.asm"
 INCLUDE "engine/in_game_trades.asm"
 INCLUDE "engine/palettes.asm"
@@ -1970,7 +2355,11 @@ INCLUDE "data/mapObjects/pewtermart.asm"
 INCLUDE "data/mapHeaders/unknowndungeon1.asm"
 INCLUDE "scripts/unknowndungeon1.asm"
 INCLUDE "data/mapObjects/unknowndungeon1.asm"
+IF DEF(_REDGREENJP)
+UnknownDungeon1Blocks: INCBIN "maps/green/unknowndungeon1.blk"
+ELSE
 UnknownDungeon1Blocks: INCBIN "maps/unknowndungeon1.blk"
+ENDC
 
 INCLUDE "data/mapHeaders/ceruleanhouse2.asm"
 INCLUDE "scripts/ceruleanhouse2.asm"
@@ -2076,15 +2465,54 @@ INCLUDE "engine/overworld/cut2.asm"
 
 INCLUDE "engine/overworld/ssanne.asm"
 
-RedFishingTilesFront: INCBIN "gfx/red_fishing_tile_front.2bpp"
-RedFishingTilesBack:  INCBIN "gfx/red_fishing_tile_back.2bpp"
-RedFishingTilesSide:  INCBIN "gfx/red_fishing_tile_side.2bpp"
-RedFishingRodTiles:   INCBIN "gfx/red_fishingrod_tiles.2bpp"
-
 INCLUDE "data/animations.asm"
 
 INCLUDE "engine/evolution.asm"
 
 INCLUDE "engine/overworld/elevator.asm"
 
+
+SECTION "bank2D",ROMX,BANK[$2D]	;joenote - This is a known empty bank. Going to start moving stuff here
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;this is a bunch of custom functions and stuff, so leave it all together in the same bank
+INCLUDE "custom_functions/func_ai.asm"
+INCLUDE "custom_functions/func_battle.asm"
+INCLUDE "custom_functions/func_enc_gen.asm"
+INCLUDE "custom_functions/func_misc.asm"
+INCLUDE "custom_functions/func_overworld.asm"
+INCLUDE "engine/battle/stats_functions.asm"	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TradingAnimationGraphics:
+INCBIN "gfx/game_boy.2bpp"
+INCBIN "gfx/link_cable.2bpp"
+TradingAnimationGraphicsEnd:
+
+; Pokeball traveling through the link cable.
+TradingAnimationGraphics2: INCBIN "gfx/trade2.2bpp"
+TradingAnimationGraphics2End:
+
+;joenote - moved this out of trainer_ai.asm in bank $E to here. 
+;Now there is lots of space for custom trainers and rosters
+INCLUDE "engine/battle/read_trainer_party.asm"
+INCLUDE "data/trainer_moves.asm"
+INCLUDE "data/trainer_parties.asm"
+
+RedFishingTilesFront: INCBIN "gfx/red_fishing_tile_front.2bpp"
+RedFishingTilesBack:  INCBIN "gfx/red_fishing_tile_back.2bpp"
+RedFishingTilesSide:  INCBIN "gfx/red_fishing_tile_side.2bpp"
+RedFishingRodTiles:   INCBIN "gfx/red_fishingrod_tiles.2bpp"
+
 INCLUDE "engine/items/tm_prices.asm"
+
+
+SECTION "bank2E",ROMX,BANK[$2E]	
+;gbcnote - This bank with hold the bg map attributes for the gameboy color among other stuff
+
+;include the bgmap files from pokemon yellow
+INCLUDE "data/bg_map_attributes.asm"
+INCLUDE "engine/bg_map_attributes.asm"
+
+INCLUDE "engine/gamefreak.asm"	;gbcnote - moved here to make space
+INCLUDE "custom_functions/func_gamma.asm"

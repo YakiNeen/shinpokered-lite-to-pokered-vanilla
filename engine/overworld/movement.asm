@@ -66,6 +66,11 @@ UpdatePlayerSprite:
 	ld l, a
 	ld a, [hl]
 	inc a
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;60fps - only update every other tick	
+	call sprite60fps
+	sub b
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 	ld [hl], a
 	cp 4
 	jr nz, .calcImageIndex
@@ -116,6 +121,13 @@ UpdateNPCSprite:
 	add a
 	ld hl, wMapSpriteData
 	add l
+	
+;joenote - Increment H if A overflows. Otherwise H will hold $D4 instead of $D5 like it should.
+;This fixes some issues with the 15th map object.
+	jr nc, .no_carry
+	inc h
+.no_carry
+	
 	ld l, a
 	ld a, [hl]        ; read movement byte 2
 	ld [wCurSpriteMovement2], a
@@ -177,7 +189,6 @@ UpdateNPCSprite:
 	res 0, [hl]
 	xor a
 	ld [wSimulatedJoypadStatesIndex], a
-	ld [wWastedByteCD3A], a
 	ret
 .next
 	cp WALK
@@ -189,6 +200,13 @@ UpdateNPCSprite:
 	jr .determineDirection
 .randomMovement
 	call GetTileSpriteStandsOn
+	push hl
+	push de
+	callba CheckForcedFacing
+	ld a, d
+	pop de
+	pop hl
+	jr c, .determineDirection
 	call Random
 .determineDirection
 	ld b, a
@@ -304,6 +322,12 @@ UpdateSpriteInWalkingAnimation:
 	ld l, a
 	ld a, [hl]                       ; c1x7 (counter until next walk animation frame)
 	inc a
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+;60fps - updated xy every other tick
+	call sprite60fps	
+	push bc
+	sub b
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;		
 	ld [hl], a                       ; c1x7 += 1
 	cp $4
 	jr nz, .noNextAnimationFrame
@@ -318,6 +342,14 @@ UpdateSpriteInWalkingAnimation:
 	ld a, [H_CURRENTSPRITEOFFSET]
 	add $3
 	ld l, a
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;60fps - updated xy every other tick
+	pop bc
+	push bc
+	ld a, b
+	and a 
+	jr nz, .xydone
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 	ld a, [hli]                      ; c1x3 (movement Y delta)
 	ld b, a
 	ld a, [hl]                       ; c1x4 (screen Y position)
@@ -328,10 +360,16 @@ UpdateSpriteInWalkingAnimation:
 	ld a, [hl]                       ; c1x6 (screen X position)
 	add b
 	ld [hl], a                       ; update screen X position
+.xydone
 	ld a, [H_CURRENTSPRITEOFFSET]
 	ld l, a
 	inc h
 	ld a, [hl]                       ; c2x0 (walk animation counter)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;60fps - make the delay decounter update every other tick	
+	pop bc
+	add b	;60fps
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	dec a
 	ld [hl], a                       ; update walk animation counter
 	ret nz
@@ -370,6 +408,29 @@ UpdateSpriteInWalkingAnimation:
 	ld [hl], a                       ; reset movement X delta
 	ret
 
+sprite60fps:
+	push hl
+	push af
+	ld h, $c2
+	ld l, $0a
+	ld a, [H_CURRENTSPRITEOFFSET]
+	add l
+	ld l, a
+	ld a, [wUnusedD721]
+	bit 4, a
+	ld a, [hl]
+	jr nz, .is60fps
+	xor a
+	jr .end
+.is60fps
+	xor $01
+.end
+	ld [hl], a
+	ld b, a
+	pop af
+	pop hl
+	ret
+
 ; update delay value (c2x8) for sprites in the delayed state (c1x1)
 UpdateSpriteMovementDelay:
 	ld h, $c2
@@ -384,6 +445,13 @@ UpdateSpriteMovementDelay:
 	ld [hl], $0
 	jr .moving
 .tickMoveCounter
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;60fps - make the delay decounter update every other tick
+	ld a, [hl]
+	call sprite60fps
+	add b
+	ld [hl], a
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	dec [hl]                ; c2x8: frame counter until next movement
 	jr nz, notYetMoving
 .moving
@@ -444,7 +512,9 @@ InitializeSpriteStatus:
 	ld a, $8
 	ld [hli], a   ; $c2x2: set Y displacement to 8
 	ld [hl], a    ; $c2x3: set X displacement to 8
-	ret
+	;ret
+	;fall through to InitializeSpriteScreenPosition
+	;This is essentially what Pokemon Yellow does to fix the amazing man glitch
 
 ; calculates the sprite's screen position form its map position and the player position
 InitializeSpriteScreenPosition:
@@ -640,23 +710,36 @@ CanWalkOntoTile:
 	bit 7, d           ; check if going upwards (d=$ff)
 	jr nz, .upwards
 	add d
-	cp $5
-	jr c, .impassable  ; if c2x2+d < 5, don't go ;bug: this tests probably were supposed to prevent sprites
-	jr .checkHorizontal                          ; from walking out too far, but this line makes sprites get stuck
-.upwards                                         ; whenever they walked upwards 5 steps
-	sub $1                                       ; on the other hand, the amount a sprite can walk out to the
-	jr c, .impassable  ; if d2x2 == 0, don't go  ; right of bottom is not limited (until the counter overflows)
+;bug: this tests probably were supposed to prevent sprites
+; from walking out too far, but this line makes sprites get stuck
+; whenever they walked upwards 5 steps
+; on the other hand, the amount a sprite can walk out to the
+; right of bottom is not limited (until the counter overflows)
+
+;joenote - time to fix this
+;	cp $5	; if c2x2+d < 5, don't go 
+;	jr c, .impassable  
+	cp $E	;joenote - if wanting to move downwards, don't go if c2x2+d > $D (that's 5 spaces from inital position)
+	jr nc, .impassable
+	jr .checkHorizontal                          
+.upwards                                         
+	sub $1	
+	cp $3	;joenote - if wanting to move upwards, don't go if c2x2 -1 < 3 (that's 5 spaces from inital position)
+	jr c, .impassable  
 .checkHorizontal
 	ld d, a
 	ld a, [hl]         ; c2x3 (sprite X displacement, initialized at $8, keep track of where a sprite did go)
 	bit 7, e           ; check if going left (e=$ff)
 	jr nz, .left
 	add e
-	cp $5              ; compare, but no conditional jump like in the vertical check above (bug?)
+;	cp $5              ; compare, but no conditional jump like in the vertical check above (bug?)
+	cp $E	;joenote - if wanting to move right, don't go if c2x3+e > $D (that's 5 spaces from inital position)
+	jr nc, .impassable
 	jr .passable
 .left
-	sub $1
-	jr c, .impassable  ; if d2x3 == 0, don't go
+	sub $1	
+	cp $3	;joenote - if wanting to move left, don't go if c2x3 - 1 < 3 (that's 5 spaces from inital position)
+	jr c, .impassable  
 .passable
 	ld [hld], a        ; update c2x3
 	ld [hl], d         ; update c2x2
@@ -734,6 +817,19 @@ DoScriptedNPCMovement:
 	ld a, [wd730]
 	bit 7, a
 	ret z
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;60fps - update animations every other frame and halve movement
+	ld de, $00
+	ld a, [wUnusedD721]
+	bit 4, a
+	jr z, .not60fps
+	call sprite60fps
+	ld e, b
+	ld d, $01
+.not60fps
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
 	ld hl, wd72e
 	bit 7, [hl]
 	set 7, [hl]
@@ -752,6 +848,9 @@ DoScriptedNPCMovement:
 	call GetSpriteScreenYPointer
 	ld c, SPRITE_FACING_UP
 	ld a, -2
+	
+	add d	;60fps
+	
 	jr .move
 .checkIfMovingDown
 	cp NPC_MOVEMENT_DOWN
@@ -759,6 +858,9 @@ DoScriptedNPCMovement:
 	call GetSpriteScreenYPointer
 	ld c, SPRITE_FACING_DOWN
 	ld a, 2
+	
+	sub d	;60fps
+	
 	jr .move
 .checkIfMovingLeft
 	cp NPC_MOVEMENT_LEFT
@@ -766,6 +868,9 @@ DoScriptedNPCMovement:
 	call GetSpriteScreenXPointer
 	ld c, SPRITE_FACING_LEFT
 	ld a, -2
+	
+	add d	;60fps
+	
 	jr .move
 .checkIfMovingRight
 	cp NPC_MOVEMENT_RIGHT
@@ -773,6 +878,9 @@ DoScriptedNPCMovement:
 	call GetSpriteScreenXPointer
 	ld c, SPRITE_FACING_RIGHT
 	ld a, 2
+	
+	sub d	;60fps
+	
 	jr .move
 .noMatch
 	cp $ff
@@ -789,6 +897,12 @@ DoScriptedNPCMovement:
 	ld [hl], a ; facing direction
 	call AnimScriptedNPCMovement
 	ld hl, wScriptedNPCWalkCounter
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;60fps - every other frame, do not decrement walk counter
+	ld a, [hl]
+	add e
+	ld [hl], a
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	dec [hl]
 	ret nz
 	ld a, 8
@@ -866,6 +980,9 @@ AdvanceScriptedNPCAnimFrameCounter:
 	ld l, a
 	ld a, [hl] ; intra-animation frame counter
 	inc a
+	
+	sub e	;60fps
+	
 	ld [hl], a
 	cp 4
 	ret nz
@@ -873,7 +990,7 @@ AdvanceScriptedNPCAnimFrameCounter:
 	ld [hl], a ; reset intra-animation frame counter
 	inc l
 	ld a, [hl] ; animation frame counter
-	inc a
+	inc a	
 	and $3
 	ld [hl], a
 	ld [hSpriteAnimFrameCounter], a

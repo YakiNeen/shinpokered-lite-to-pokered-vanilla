@@ -83,3 +83,4 @@ _LavenderHouse1Text6::
 	para "Gone! It's been"
 	line "clipped out!"
 	done
+

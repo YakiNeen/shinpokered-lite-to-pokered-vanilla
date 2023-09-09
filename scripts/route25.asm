@@ -52,7 +52,7 @@ Route25TextPointers:
 	dw Route25Text9
 	dw PickUpItemText
 	dw Route25Text11
-
+	
 Route25TrainerHeader0:
 	dbEventFlagBit EVENT_BEAT_ROUTE_25_TRAINER_0
 	db ($2 << 4) ; trainer's view range
@@ -189,6 +189,7 @@ Route25Text9:
 	ld hl, Route25TrainerHeader8
 	call TalkToTrainer
 	jp TextScriptEnd
+	
 
 Route25BattleText1:
 	TX_FAR _Route25BattleText1
@@ -301,3 +302,4 @@ Route25AfterBattleText9:
 Route25Text11:
 	TX_FAR _Route25Text11
 	db "@"
+

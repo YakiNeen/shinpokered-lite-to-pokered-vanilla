@@ -32,6 +32,7 @@ _Mansion2Text4::
 	cont "#MON, MEW."
 	done
 
+
 _Mansion2Text_520c2::
 	text "A secret switch!"
 

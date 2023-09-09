@@ -107,9 +107,9 @@ Start::
 	xor a
 	jr .ok
 .gbc
-	ld a, 0
+	ld a, 1	;gbctest - set the marker for being in gbc mode
 .ok
-	ld [wGBC], a
+	ld [hGBC], a
 	jp Init
 
 
@@ -254,15 +254,15 @@ DrawHPBar::
 LoadMonData::
 	jpab LoadMonData_
 
-OverwritewMoves::
+;OverwritewMoves::
 ; Write c to [wMoves + b]. Unused.
-	ld hl, wMoves
-	ld e, b
-	ld d, 0
-	add hl, de
-	ld a, c
-	ld [hl], a
-	ret
+;	ld hl, wMoves
+;	ld e, b
+;	ld d, 0
+;	add hl, de
+;	ld a, c
+;	ld [hl], a
+;	ret
 
 LoadFlippedFrontSpriteByMonIndex::
 	ld a, 1
@@ -512,17 +512,17 @@ PrintStatusConditionNotFainted:
 ; INPUT:
 ; hl = destination address
 ; [wLoadedMonLevel] = level
-PrintLevel::
-	ld a, $6e ; ":L" tile ID
-	ld [hli], a
-	ld c, 2 ; number of digits
-	ld a, [wLoadedMonLevel] ; level
-	cp 100
-	jr c, PrintLevelCommon
-; if level at least 100, write over the ":L" tile
-	dec hl
-	inc c ; increment number of digits to 3
-	jr PrintLevelCommon
+PrintLevel::	;joenote - just fall through to PrintLevelFull to save some space.
+;	ld a, $6e ; ":L" tile ID
+;	ld [hli], a
+;	ld c, 2 ; number of digits
+;	ld a, [wLoadedMonLevel] ; level
+;	cp 100
+;	jr c, PrintLevelCommon
+;; if level at least 100, write over the ":L" tile
+;	dec hl
+;	inc c ; increment number of digits to 3
+;	jr PrintLevelCommon
 
 ; prints the level without leaving off ":L" regardless of level
 ; INPUT:
@@ -540,14 +540,14 @@ PrintLevelCommon::
 	ld b, LEFT_ALIGN | 1 ; 1 byte
 	jp PrintNumber
 
-GetwMoves::
+;GetwMoves::
 ; Unused. Returns the move at index a from wMoves in a
-	ld hl, wMoves
-	ld c, a
-	ld b, 0
-	add hl, bc
-	ld a, [hl]
-	ret
+;	ld hl, wMoves
+;	ld c, a
+;	ld b, 0
+;	add hl, bc
+;	ld a, [hl]
+;	ret
 
 ; copies the base stat data of a pokemon to wMonHeader
 ; INPUT:
@@ -565,9 +565,12 @@ GetMonHeader::
 	push af
 	ld a, [wd0b5]
 	ld [wd11e], a
+;joenote - modifying for a stable missingno that can be loaded
+	cp MISSINGNO_B5 ; stablized missingno with actual stats
+	jr z, .missingno	
 	ld de, FossilKabutopsPic
 	ld b, $66 ; size of Kabutops fossil and Ghost sprites
-	cp FOSSIL_KABUTOPS ; Kabutops fossil
+	cp FOSSIL_KABUTOPS
 	jr z, .specialID
 	ld de, GhostPic
 	cp MON_GHOST ; Ghost
@@ -576,8 +579,8 @@ GetMonHeader::
 	ld b, $77 ; size of Aerodactyl fossil sprite
 	cp FOSSIL_AERODACTYL ; Aerodactyl fossil
 	jr z, .specialID
-	cp MEW
-	jr z, .mew
+	;cp MEW	
+	;jr z, .mew
 	predef IndexToPokedex   ; convert pokemon ID in [wd11e] to pokedex number
 	ld a, [wd11e]
 	dec a
@@ -596,11 +599,18 @@ GetMonHeader::
 	inc hl
 	ld [hl], d
 	jr .done
-.mew
-	ld hl, MewBaseStats
+;.mew	;joenote - mew's base stats are now lined-up with the other pokemon, so this isn't needed
+;	ld hl, MewBaseStats
+;	ld de, wMonHeader
+;	ld bc, MonBaseStatsEnd - MonBaseStats
+;	ld a, BANK(MewBaseStats)
+;	call FarCopyData
+;do this for missingno instead
+.missingno
+	ld hl, MissingnoBaseStats
 	ld de, wMonHeader
 	ld bc, MonBaseStatsEnd - MonBaseStats
-	ld a, BANK(MewBaseStats)
+	ld a, BANK(MissingnoBaseStats)
 	call FarCopyData
 .done
 	ld a, [wd0b5]
@@ -722,38 +732,36 @@ UncompressMonSprite::
 	ld [wSpriteInputPtr], a    ; fetch sprite input pointer
 	ld a, [hl]
 	ld [wSpriteInputPtr+1], a
+;joenote - expanding this to use 7 rom banks to fit the spaceworld back sprites if desired
 ; define (by index number) the bank that a pokemon's image is in
-; index = Mew, bank 1
-; index = Kabutops fossil, bank $B
-; index < $1F, bank 9
-; $1F ≤ index < $4A, bank $A
-; $4A ≤ index < $74, bank $B
-; $74 ≤ index < $99, bank $C
-; $99 ≤ index,       bank $D
 	ld a, [wcf91] ; XXX name for this ram location
 	ld b, a
 	cp MEW
 	ld a, BANK(MewPicFront)
 	jr z, .GotBank
 	ld a, b
-	cp FOSSIL_KABUTOPS
-	ld a, BANK(FossilKabutopsPic)
-	jr z, .GotBank
-	ld a, b
-	cp TANGELA + 1
-	ld a, BANK(TangelaPicFront)
+	cp SHELLDER + 1
+	ld a, BANK(ShellderPicFront)
 	jr c, .GotBank
 	ld a, b
-	cp MOLTRES + 1
-	ld a, BANK(MoltresPicFront)
+	cp DROWZEE + 1
+	ld a, BANK(DrowzeePicFront)
 	jr c, .GotBank
 	ld a, b
-	cp BEEDRILL + 2
-	ld a, BANK(BeedrillPicFront)
+	cp NINETALES + 1
+	ld a, BANK(NinetalesPicFront)
 	jr c, .GotBank
 	ld a, b
-	cp STARMIE + 1
-	ld a, BANK(StarmiePicFront)
+	cp KAKUNA + 1
+	ld a, BANK(KakunaPicFront)
+	jr c, .GotBank
+	ld a, b
+	cp CLEFABLE + 1
+	ld a, BANK(ClefablePicFront)
+	jr c, .GotBank
+	ld a, b
+	cp PORYGON + 1
+	ld a, BANK(PorygonPicFront)
 	jr c, .GotBank
 	ld a, BANK(VictreebelPicFront)
 .GotBank
@@ -923,9 +931,16 @@ INCLUDE "home/audio.asm"
 
 
 UpdateSprites::
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;joenote - It's not a good idea for PrepareOAMData to run in Vblank in the middle of updating sprites
+;			If it does, then sprites can end up being left out and not sent to the OAM buffer.
+;			Prevent this by setting a flag that will cause it to be skipped in Vblank
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	ld a, [wUpdateSpritesEnabled]
 	dec a
 	ret nz
+	ld hl, hFlagsFFFA
+	set 0, [hl]	;joenote - do not allow OAM updates  in vblank while updating sprites
 	ld a, [H_LOADEDROMBANK]
 	push af
 	ld a, Bank(_UpdateSprites)
@@ -935,6 +950,8 @@ UpdateSprites::
 	pop af
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
+	ld hl, hFlagsFFFA
+	res 0, [hl];joenote - allow OAM updates again
 	ret
 
 INCLUDE "data/mart_inventories.asm"
@@ -1035,9 +1052,7 @@ FadeOutAudio::
 	ld b, a
 	xor a
 	ld [wAudioFadeOutControl], a
-	ld a, $ff
-	ld [wNewSoundID], a
-	call PlaySound
+	call StopAllMusic
 	ld a, [wAudioSavedROMBank]
 	ld [wAudioROMBank], a
 	ld a, b
@@ -1212,6 +1227,7 @@ DisplayPokemartDialogue::
 PokemartGreetingText::
 	TX_FAR _PokemartGreetingText
 	db "@"
+
 
 LoadItemList::
 	ld a, 1
@@ -1419,10 +1435,11 @@ DisplayListMenuID::
 	ld [wTopMenuItemX], a
 	ld a, A_BUTTON | B_BUTTON | SELECT
 	ld [wMenuWatchedKeys], a
-	ld c, 10
-	call DelayFrames
+	homecall PrepareOAMData	;joenote - makes mart menus cleaner by updating the OAM sprite table ahead of vblank
+	;ld c, 10
+	;call DelayFrames
 
-DisplayListMenuIDLoop::
+DisplayListMenuIDLoop::	
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED], a ; disable transfer
 	call PrintListMenuEntries
@@ -1498,7 +1515,7 @@ DisplayListMenuIDLoop::
 	push hl
 	call GetItemPrice
 	pop hl
-	ld a, [wListMenuID]
+	ld a,[wListMenuID]
 	cp ITEMLISTMENU
 	jr nz, .skipGettingQuantity
 ; if it's an item menu
@@ -2144,6 +2161,85 @@ DisplayTextBoxID::
 	ld [MBC1RomBank], a
 	ret
 
+;gbcnote - new functions
+UpdateGBCPal_BGP::
+	push af
+	ld a, [hGBC]
+	and a
+	jr z, .notGBC
+	push bc
+	push de
+	push hl
+	ld a, [rBGP]
+	ld b, a
+	ld a, [wLastBGP]
+	cp b
+	jr z, .noChangeInBGP
+	callba _UpdateGBCPal_BGP
+.noChangeInBGP
+	pop hl
+	pop de
+	pop bc
+.notGBC
+	pop af
+	ret
+	
+UpdateGBCPal_OBP0::
+	push af
+	ld a, [hGBC]
+	and a
+	jr z, .notGBC
+	push bc
+	push de
+	push hl
+	ld a, [rOBP0]
+	ld b, a
+	ld a, [wLastOBP0]
+	cp b
+	jr z, .noChangeInOBP0
+	ld d, CONVERT_OBP0
+	callba _UpdateGBCPal_OBP
+.noChangeInOBP0
+	pop hl
+	pop de
+	pop bc
+.notGBC
+	pop af
+	ret
+	
+UpdateGBCPal_OBP1::
+	push af
+	ld a, [hGBC]
+	and a
+	jr z, .notGBC
+	push bc
+	push de
+	push hl
+	ld a, [rOBP1]
+	ld b, a
+	ld a, [wLastOBP1]
+	cp b
+	jr z, .noChangeInOBP1
+	ld d, CONVERT_OBP1
+	callba _UpdateGBCPal_OBP
+.noChangeInOBP1
+	pop hl
+	pop de
+	pop bc
+.notGBC
+	pop af
+	ret
+	
+Func_3082:: ;added from pokeyellow - update audio so it doesn't "lag"
+	ld a, [H_LOADEDROMBANK]
+	push af
+	call FadeOutAudio
+	callbs Music_DoLowHealthAlarm
+	callbs Audio1_UpdateMusic
+	pop af
+	call BankswitchCommon
+	ret
+
 ; not zero if an NPC movement script is running, the player character is
 ; automatically stepping down from a door, or joypad states are being simulated
 IsPlayerCharacterBeingControlledByGame::
@@ -2270,11 +2366,12 @@ ReadTrainerHeaderInfo::
 	jr z, .readPointer ; read after battle text
 	cp $8
 	jr z, .readPointer ; read end battle text
-	cp $a
-	jr nz, .done
-	ld a, [hli]        ; read end battle text (2) but override the result afterwards (XXX why, bug?)
-	ld d, [hl]
-	ld e, a
+;joenote - useless code. commenting out to free up space
+;	cp $a
+;	jr nz, .done
+;	ld a, [hli]        ; read end battle text (2) but override the result afterwards (XXX why, bug?)
+;	ld d, [hl]
+;	ld e, a
 	jr .done
 .readPointer
 	ld a, [hli]
@@ -2303,12 +2400,13 @@ TalkToTrainer::
 	ld a, $6
 	call ReadTrainerHeaderInfo     ; print after battle text
 	jp PrintText
+	
 .trainerNotYetFought
 	ld a, $4
 	call ReadTrainerHeaderInfo     ; print before battle text
 	call PrintText
-	ld a, $a
-	call ReadTrainerHeaderInfo     ; (?) does nothing apparently (maybe bug in ReadTrainerHeaderInfo)
+	;ld a, $a	;joenote - commenting out to free up space
+	;call ReadTrainerHeaderInfo     ; (?) does nothing apparently (maybe bug in ReadTrainerHeaderInfo)
 	push de
 	ld a, $8
 	call ReadTrainerHeaderInfo     ; read end battle text
@@ -2581,13 +2679,14 @@ TrainerEndBattleText::
 ; only engage withe trainer if the player is not already
 ; engaged with another trainer
 ; XXX unused?
-CheckIfAlreadyEngaged::
-	ld a, [wFlags_0xcd60]
-	bit 0, a
-	ret nz
-	call EngageMapTrainer
-	xor a
-	ret
+;CheckIfAlreadyEngaged::
+;	ld a, [wFlags_0xcd60]
+;	bit 0, a
+;	ret nz
+;	call EngageMapTrainer
+;	xor a
+;	ret
+;joenote - removing to free up space
 
 PlayTrainerMusic::
 	ld a, [wEngagedTrainerClass]
@@ -2602,8 +2701,7 @@ PlayTrainerMusic::
 	ret nz
 	xor a
 	ld [wAudioFadeOutControl], a
-	ld a, $ff
-	call PlaySound
+	call StopAllMusic
 	ld a, BANK(Music_MeetEvilTrainer)
 	ld [wAudioROMBank], a
 	ld [wAudioSavedROMBank], a
@@ -2718,6 +2816,12 @@ SetSpriteFacingDirectionAndDelay::
 	jp DelayFrames
 
 SetSpriteFacingDirection::
+;joenote - indicator that sprite's facing is being forced
+	ld a, $1
+	ld [H_SPRITEDATAOFFSET], a
+	call GetPointerWithinSpriteStateData2
+	ld a, 1
+	ld [hl], a
 	ld a, $9
 	ld [H_SPRITEDATAOFFSET], a
 	call GetPointerWithinSpriteStateData1
@@ -2945,6 +3049,7 @@ BankswitchHome::
 	ld a, [H_LOADEDROMBANK]
 	ld [wBankswitchHomeSavedROMBank], a
 	ld a, [wBankswitchHomeTemp]
+BankswitchCommon::
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
 	ret
@@ -2974,11 +3079,16 @@ Bankswitch::
 	ld [MBC1RomBank], a
 	ret
 
-; displays yes/no choice
+; displays yes/no choice (yes is 0, no is 1)
 ; yes -> set carry
 YesNoChoice::
 	call SaveScreenTilesToBuffer1
 	call InitYesNoTextBoxParameters
+	jr DisplayYesNoChoice
+
+NoYesChoice::	;joenote - added this
+	call SaveScreenTilesToBuffer1
+	call InitNoYesTextBoxParameters
 	jr DisplayYesNoChoice
 
 Func_35f4::
@@ -2994,6 +3104,13 @@ InitYesNoTextBoxParameters::
 	ld bc, $80f
 	ret
 
+InitNoYesTextBoxParameters::	;joenote - added this
+	ld a, NO_YES_MENU
+	ld [wTwoOptionMenuID], a
+	coord hl, 14, 7
+	ld bc, $80f
+	ret
+
 YesNoChoicePokeCenter::
 	call SaveScreenTilesToBuffer1
 	ld a, HEAL_CANCEL_MENU
@@ -3002,12 +3119,13 @@ YesNoChoicePokeCenter::
 	lb bc, 8, 12
 	jr DisplayYesNoChoice
 
-WideYesNoChoice:: ; unused
-	call SaveScreenTilesToBuffer1
-	ld a, WIDE_YES_NO_MENU
-	ld [wTwoOptionMenuID], a
-	coord hl, 12, 7
-	lb bc, 8, 13
+;WideYesNoChoice:: ; unused
+;	call SaveScreenTilesToBuffer1
+;	ld a, WIDE_YES_NO_MENU
+;	ld [wTwoOptionMenuID], a
+;	coord hl, 12, 7
+;	lb bc, 8, 13
+;joenote - removing to free up space
 
 DisplayYesNoChoice::
 	ld a, TWO_OPTION_MENU
@@ -3057,7 +3175,6 @@ MoveSprite_::
 	ld [wSimulatedJoypadStatesEnd], a
 	dec a
 	ld [wJoyIgnore], a
-	ld [wWastedByteCD3A], a
 	ret
 
 ; divides [hDividend2] by [hDivisor2] and stores the quotient in [hQuotient2]
@@ -3229,7 +3346,7 @@ WaitForSoundToFinish::
 NamePointers::
 	dw MonsterNames
 	dw MoveNames
-	dw UnusedNames
+	dw ItemNames;joenote-dummy value to replace UnusedNames
 	dw ItemNames
 	dw wPartyMonOT ; player's OT names list
 	dw wEnemyMonOT ; enemy's OT names list
@@ -3247,8 +3364,18 @@ GetName::
 
 	; TM names are separate from item names.
 	; BUG: This applies to all names instead of just items.
+	;joenote - fixing the aforementioned bug
+	push bc
+	ld b, a
+	ld a, [wNameListType]
+	cp ITEM_NAME
+	ld a, b
+	pop bc
+	jr nz, .notMachine	;if the list type is not items, then A cannot be referring to a machine
+	;At this line, definitely working with an item list. So see if it's a machine or item
 	cp HM_01
-	jp nc, GetMachineName
+	jp nc, GetMachineName	;joenote - function removed. Handle list-based tm & hm names here.
+.notMachine
 
 	ld a, [H_LOADEDROMBANK]
 	push af
@@ -3308,10 +3435,10 @@ GetName::
 	ld bc, $0014
 	call CopyData
 .gotPtr
-	ld a, e
-	ld [wUnusedCF8D], a
+;	ld a, e
+;	ld [wUnusedCF8D], a
 	ld a, d
-	ld [wUnusedCF8D + 1], a
+;	ld [wUnusedCF8D + 1], a
 	pop de
 	pop bc
 	pop hl
@@ -3616,6 +3743,9 @@ CalcStats::
 ; c: stat to calc (HP=1,Atk=2,Def=3,Spd=4,Spc=5)
 ; b: consider stat exp?
 ; hl: base ptr to stat exp values ([hl + 2*c - 1] and [hl + 2*c])
+; have to point hl to *Mon1HPExp - 1
+; if b=0, then hl should point to <battle_struct>HP
+; requires that data be preloaded into wMonHeader using GetMonHeader
 CalcStat::
 	push hl
 	push de
@@ -3659,7 +3789,7 @@ CalcStat::
 	srl c
 	pop hl
 	push bc
-	ld bc, wPartyMon1DVs - (wPartyMon1HPExp - 1) ; also wEnemyMonDVs - wEnemyMonHP
+	ld bc, wPartyMon1DVs - (wPartyMon1HPExp - 1) ; also wEnemyMonDVs - wEnemyMonHP beause the structures are the same size
 	add hl, bc
 	pop bc
 	ld a, c
@@ -4190,220 +4320,22 @@ PrintText_NoCreatingTextBox::
 
 PrintNumber::
 ; Print the c-digit, b-byte value at de.
-; Allows 2 to 7 digits. For 1-digit numbers, add
+; Allows 2 to 8 digits. For 1-digit numbers, add
 ; the value to char "0" instead of calling PrintNumber.
 ; Flags LEADING_ZEROES and LEFT_ALIGN can be given
 ; in bits 7 and 6 of b respectively.
-	push bc
-	xor a
-	ld [H_PASTLEADINGZEROES], a
-	ld [H_NUMTOPRINT], a
-	ld [H_NUMTOPRINT + 1], a
-	ld a, b
-	and $f
-	cp 1
-	jr z, .byte
-	cp 2
-	jr z, .word
-.long
-	ld a, [de]
-	ld [H_NUMTOPRINT], a
-	inc de
-	ld a, [de]
-	ld [H_NUMTOPRINT + 1], a
-	inc de
-	ld a, [de]
-	ld [H_NUMTOPRINT + 2], a
-	jr .start
-
-.word
-	ld a, [de]
-	ld [H_NUMTOPRINT + 1], a
-	inc de
-	ld a, [de]
-	ld [H_NUMTOPRINT + 2], a
-	jr .start
-
-.byte
-	ld a, [de]
-	ld [H_NUMTOPRINT + 2], a
-
-.start
+;joenote - make a backup of the value at DE and load from there.
 	push de
-
-	ld d, b
-	ld a, c
-	ld b, a
-	xor a
-	ld c, a
-	ld a, b
-
-	cp 2
-	jr z, .tens
-	cp 3
-	jr z, .hundreds
-	cp 4
-	jr z, .thousands
-	cp 5
-	jr z, .ten_thousands
-	cp 6
-	jr z, .hundred_thousands
-
-print_digit: macro
-
-if (\1) / $10000
-	ld a, \1 / $10000 % $100
-else	xor a
-endc
-	ld [H_POWEROFTEN + 0], a
-
-if (\1) / $100
-	ld a, \1 / $100   % $100
-else	xor a
-endc
-	ld [H_POWEROFTEN + 1], a
-
-	ld a, \1 / $1     % $100
-	ld [H_POWEROFTEN + 2], a
-
-	call .PrintDigit
-	call .NextDigit
-endm
-
-.millions          print_digit 1000000
-.hundred_thousands print_digit 100000
-.ten_thousands     print_digit 10000
-.thousands         print_digit 1000
-.hundreds          print_digit 100
-
-.tens
-	ld c, 0
-	ld a, [H_NUMTOPRINT + 2]
-.mod
-	cp 10
-	jr c, .ok
-	sub 10
-	inc c
-	jr .mod
-.ok
-
-	ld b, a
-	ld a, [H_PASTLEADINGZEROES]
-	or c
-	ld [H_PASTLEADINGZEROES], a
-	jr nz, .past
-	call .PrintLeadingZero
-	jr .next
-.past
-	ld a, "0"
-	add c
-	ld [hl], a
-.next
-
-	call .NextDigit
-.ones
-	ld a, "0"
-	add b
-	ld [hli], a
+	ld a, [de]
+	ld [wPrintNumDE], a
+	inc de
+	ld a, [de]
+	ld [wPrintNumDE + 1], a
+	inc de
+	ld a, [de]
+	ld [wPrintNumDE + 2], a
 	pop de
-	dec de
-	pop bc
-	ret
-
-.PrintDigit:
-; Divide by the current decimal place.
-; Print the quotient, and keep the modulus.
-	ld c, 0
-.loop
-	ld a, [H_POWEROFTEN]
-	ld b, a
-	ld a, [H_NUMTOPRINT]
-	ld [H_SAVEDNUMTOPRINT], a
-	cp b
-	jr c, .underflow0
-	sub b
-	ld [H_NUMTOPRINT], a
-	ld a, [H_POWEROFTEN + 1]
-	ld b, a
-	ld a, [H_NUMTOPRINT + 1]
-	ld [H_SAVEDNUMTOPRINT + 1], a
-	cp b
-	jr nc, .noborrow1
-
-	ld a, [H_NUMTOPRINT]
-	or 0
-	jr z, .underflow1
-	dec a
-	ld [H_NUMTOPRINT], a
-	ld a, [H_NUMTOPRINT + 1]
-.noborrow1
-
-	sub b
-	ld [H_NUMTOPRINT + 1], a
-	ld a, [H_POWEROFTEN + 2]
-	ld b, a
-	ld a, [H_NUMTOPRINT + 2]
-	ld [H_SAVEDNUMTOPRINT + 2], a
-	cp b
-	jr nc, .noborrow2
-
-	ld a, [H_NUMTOPRINT + 1]
-	and a
-	jr nz, .borrowed
-
-	ld a, [H_NUMTOPRINT]
-	and a
-	jr z, .underflow2
-	dec a
-	ld [H_NUMTOPRINT], a
-	xor a
-.borrowed
-
-	dec a
-	ld [H_NUMTOPRINT + 1], a
-	ld a, [H_NUMTOPRINT + 2]
-.noborrow2
-	sub b
-	ld [H_NUMTOPRINT + 2], a
-	inc c
-	jr .loop
-
-.underflow2
-	ld a, [H_SAVEDNUMTOPRINT + 1]
-	ld [H_NUMTOPRINT + 1], a
-.underflow1
-	ld a, [H_SAVEDNUMTOPRINT]
-	ld [H_NUMTOPRINT], a
-.underflow0
-	ld a, [H_PASTLEADINGZEROES]
-	or c
-	jr z, .PrintLeadingZero
-
-	ld a, "0"
-	add c
-	ld [hl], a
-	ld [H_PASTLEADINGZEROES], a
-	ret
-
-.PrintLeadingZero:
-	bit BIT_LEADING_ZEROES, d
-	ret z
-	ld [hl], "0"
-	ret
-
-.NextDigit:
-; Increment unless the number is left-aligned,
-; leading zeroes are not printed, and no digits
-; have been printed yet.
-	bit BIT_LEADING_ZEROES, d
-	jr nz, .inc
-	bit BIT_LEFT_ALIGN, d
-	jr z, .inc
-	ld a, [H_PASTLEADINGZEROES]
-	and a
-	ret z
-.inc
-	inc hl
+	predef _PrintNumber
 	ret
 
 
@@ -4483,6 +4415,9 @@ GBPalNormal::
 	ld [rBGP], a
 	ld a, %11010000 ; 3100
 	ld [rOBP0], a
+	call UpdateGBCPal_BGP
+	call UpdateGBCPal_OBP0
+	call UpdateGBCPal_OBP1
 	ret
 
 GBPalWhiteOut::
@@ -4491,6 +4426,9 @@ GBPalWhiteOut::
 	ld [rBGP], a
 	ld [rOBP0], a
 	ld [rOBP1], a
+	call UpdateGBCPal_BGP
+	call UpdateGBCPal_OBP0
+	call UpdateGBCPal_OBP1
 	ret
 
 
@@ -4649,6 +4587,24 @@ SetMapTextPointer::
 	ld a, h
 	ld [wMapTextPtr + 1], a
 	ret
+	
+StatModifierRatios:
+; first byte is numerator, second byte is denominator
+	db 25, 100  ; 0.25
+	db 28, 100  ; 0.28
+	db 33, 100  ; 0.33
+	db 40, 100  ; 0.40
+	db 50, 100  ; 0.50
+	db 66, 100  ; 0.66
+	db  1,   1  ; 1.00
+	db 15,  10  ; 1.50
+	db  2,   1  ; 2.00
+	db 25,  10  ; 2.50
+	db  3,   1  ; 3.00
+	db 35,  10  ; 3.50
+	db  4,   1  ; 4.00
+
+
 
 TextPredefs::
 const_value = 1

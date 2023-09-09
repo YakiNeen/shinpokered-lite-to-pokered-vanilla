@@ -32,10 +32,11 @@ SuperRodData:
 	dbw SAFARI_ZONE_WEST, FishingGroup6
 	dbw SAFARI_ZONE_CENTER, FishingGroup6
 	dbw UNKNOWN_DUNGEON_2, FishingGroup9
-	dbw UNKNOWN_DUNGEON_3, FishingGroup9
+	dbw UNKNOWN_DUNGEON_3, FishingGroup2
 	dbw UNKNOWN_DUNGEON_1, FishingGroup9
 	db $FF
 
+SuperRodLabelStart::
 ; fishing groups
 ; number of monsters, followed by level/monster pairs
 FishingGroup1:
@@ -98,3 +99,5 @@ FishingGroup10:
 	db 15,KRABBY
 	db 15,GOLDEEN
 	db 15,MAGIKARP
+
+SuperRodLabelEnd::

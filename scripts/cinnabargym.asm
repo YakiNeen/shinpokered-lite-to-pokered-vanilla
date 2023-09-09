@@ -159,8 +159,8 @@ CinnabarGymScript3_75857:
 .asm_75880
 	ld hl, wObtainedBadges
 	set 6, [hl]
-	ld hl, wBeatGymFlags
-	set 6, [hl]
+	;ld hl, wBeatGymFlags	;joenote - redundant
+	;set 6, [hl]
 
 	; deactivate gym trainers
 	SetEventRange EVENT_BEAT_CINNABAR_GYM_TRAINER_0, EVENT_BEAT_CINNABAR_GYM_TRAINER_6
@@ -233,6 +233,7 @@ BlaineBattleText:
 
 BlaineEndBattleText:
 	TX_FAR _BlaineEndBattleText
+	;joenote - now plays an unused item sfx for getting a badge
 	TX_SFX_KEY_ITEM ; actually plays the second channel of SFX_BALL_POOF due to the wrong music bank being loaded
 	TX_WAIT
 	db "@"
@@ -260,6 +261,7 @@ CinnabarGymText2:
 	call CinnabarGymScript_757a0
 	CheckEvent EVENT_BEAT_CINNABAR_GYM_TRAINER_0
 	jr nz, .asm_46bb4
+.cinnabar_rematch0
 	ld hl, CinnabarGymText_7595f
 	call PrintText
 	ld hl, CinnabarGymText_75964
@@ -288,6 +290,7 @@ CinnabarGymText3:
 	call CinnabarGymScript_757a0
 	CheckEvent EVENT_BEAT_CINNABAR_GYM_TRAINER_1
 	jr nz, .asm_4b406
+.cinnabar_rematch1
 	ld hl, CinnabarGymText_75994
 	call PrintText
 	ld hl, CinnabarGymText_75999
@@ -316,6 +319,7 @@ CinnabarGymText4:
 	call CinnabarGymScript_757a0
 	CheckEvent EVENT_BEAT_CINNABAR_GYM_TRAINER_2
 	jr nz, .asm_c0673
+.cinnabar_rematch2
 	ld hl, CinnabarGymText_759c9
 	call PrintText
 	ld hl, CinnabarGymText_759ce
@@ -344,6 +348,7 @@ CinnabarGymText5:
 	call CinnabarGymScript_757a0
 	CheckEvent EVENT_BEAT_CINNABAR_GYM_TRAINER_3
 	jr nz, .asm_5cfd7
+.cinnabar_rematch3
 	ld hl, CinnabarGymText_759fe
 	call PrintText
 	ld hl, CinnabarGymText_75a03
@@ -372,6 +377,7 @@ CinnabarGymText6:
 	call CinnabarGymScript_757a0
 	CheckEvent EVENT_BEAT_CINNABAR_GYM_TRAINER_4
 	jr nz, .asm_776b4
+.cinnabar_rematch4
 	ld hl, CinnabarGymText_75a33
 	call PrintText
 	ld hl, CinnabarGymText_75a38
@@ -400,6 +406,7 @@ CinnabarGymText7:
 	call CinnabarGymScript_757a0
 	CheckEvent EVENT_BEAT_CINNABAR_GYM_TRAINER_5
 	jr nz, .asm_2f755
+.cinnabar_rematch5
 	ld hl, CinnabarGymText_75a68
 	call PrintText
 	ld hl, CinnabarGymText_75a6d
@@ -428,6 +435,7 @@ CinnabarGymText8:
 	call CinnabarGymScript_757a0
 	CheckEvent EVENT_BEAT_CINNABAR_GYM_TRAINER_6
 	jr nz, .asm_d87be
+.cinnabar_rematch6
 	ld hl, CinnabarGymText_75a9d
 	call PrintText
 	ld hl, CinnabarGymText_75aa2

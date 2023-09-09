@@ -383,6 +383,11 @@ UpdateMovingBgTiles::
 	and a
 	ret z ; no animations if indoors (or if a menu set this to 0)
 
+;joenote - fixes a strange incident where $FF is written to this one byte of a water tile
+	ld a,[rLY]
+	cp $90 ; check if not in vblank period??? (maybe if vblank is too long)
+	ret c
+
 	ld a, [hMovingBGTilesCounter1]
 	inc a
 	ld [hMovingBGTilesCounter1], a
@@ -430,13 +435,25 @@ UpdateMovingBgTiles::
 	ld [hMovingBGTilesCounter1], a
 
 	ld a, [wMovingBGTilesCounter2]
-	and 3
+IF DEF(_REDGREENJP)
+	and 2
 	cp 2
+ELSE
+	and 3
+	cp 1
+ENDC
+
+IF DEF(_REDGREENJP)
+	ld hl, FlowerTile1
+	jr c, .copy
+	ld hl, FlowerTile2
+ELSE
 	ld hl, FlowerTile1
 	jr c, .copy
 	ld hl, FlowerTile2
 	jr z, .copy
 	ld hl, FlowerTile3
+ENDC
 .copy
 	ld de, vTileset + $3 * $10
 	ld c, $10
@@ -448,6 +465,12 @@ UpdateMovingBgTiles::
 	jr nz, .loop
 	ret
 
+IF DEF(_REDGREENJP)
+FlowerTile1: INCBIN "gfx/tilesets/green/flower/flower1.2bpp"
+FlowerTile2: INCBIN "gfx/tilesets/green/flower/flower2.2bpp"
+ELSE
 FlowerTile1: INCBIN "gfx/tilesets/flower/flower1.2bpp"
 FlowerTile2: INCBIN "gfx/tilesets/flower/flower2.2bpp"
 FlowerTile3: INCBIN "gfx/tilesets/flower/flower3.2bpp"
+ENDC
+

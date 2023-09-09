@@ -229,6 +229,7 @@ SECTION "Text 3", ROMX, BANK[TEXT_3]
 INCLUDE "text/maps/rock_tunnel_b2f_2.asm"
 INCLUDE "text/maps/seafoam_islands_b4f.asm"
 
+
 _AIBattleWithdrawText::
 	TX_RAM wTrainerName
 	text " with-"
@@ -747,8 +748,8 @@ _ViridianSchoolNotebookText2::
 	cont "catch, so weaken"
 	cont "it first!"
 
-	para "Poison, burns and"
-	line "other damage are"
+	para "Sleep, paralysis"
+	line "and damage is"
 	cont "effective!"
 	prompt
 
@@ -900,9 +901,12 @@ _ViridianBlackboardPoisonText::
 	prompt
 
 _ViridianBlackboardPrlzText::
-	text "Paralysis could"
+	text "Paralysis can"
 	line "make #MON"
 	cont "moves misfire!"
+	
+	para "It cuts SPEED"
+	line "by 75 percent."
 
 	para "Paralysis remains"
 	line "after battles."
@@ -913,7 +917,7 @@ _ViridianBlackboardPrlzText::
 
 _ViridianBlackboardBurnText::
 	text "A burn reduces"
-	line "power and speed."
+	line "ATTACK by half."
 	cont "It also causes"
 	cont "ongoing damage."
 
@@ -1022,10 +1026,17 @@ _PokemonBooksText::
 	line "#MON books!"
 	done
 
+IF DEF(_JPTXT)
+_DiglettSculptureText::
+	text "It's a statue of"
+	line "a fat Buddha."
+	done
+ELSE
 _DiglettSculptureText::
 	text "It's a sculpture"
 	line "of DIGLETT."
 	done
+ENDC
 
 _ElevatorText::
 	text "This is an"
@@ -1107,10 +1118,10 @@ _UseNextMonText::
 	text "Use next #MON?"
 	done
 
-_Sony1WinText::
-	text "<RIVAL>: Yeah! Am"
-	line "I great or what?"
-	prompt
+;_Sony1WinText::	;joenote - made redundant
+;	text "<RIVAL>: Yeah! Am"
+;	line "I great or what?"
+;	prompt
 
 _PlayerBlackedOutText2::
 	text "<PLAYER> is out of"
@@ -1344,10 +1355,11 @@ _KeptGoingAndCrashedText::
 	cont "crashed!"
 	prompt
 
-_UnaffectedText::
-	text "<TARGET>'s"
-	line "unaffected!"
-	prompt
+;joenote - the same in english as _IsUnaffectedText, so it's redundant 
+;_UnaffectedText::
+;	text "<TARGET>'s"
+;	line "unaffected!"
+;	prompt
 
 _DoesntAffectMonText::
 	text "It doesn't affect"
@@ -1424,16 +1436,20 @@ _GainedText::
 	text " gained"
 	line "@@"
 
+;_WithExpAllText::
+;	text "with EXP.ALL,"
+;	cont "@@"
+;joenote - making this less annoying
 _WithExpAllText::
-	text "with EXP.ALL,"
-	cont "@@"
+	text "EXP.ALL gives team"
+	line "@@"
 
 _BoostedText::
 	text "a boosted"
 	cont "@@"
 
 _ExpPointsText::
-	TX_NUM wExpAmountGained, 2, 4
+	TX_NUM wExpAmountGained, 2, 5	;joenote - increased to 5 digits
 	text " EXP. Points!"
 	prompt
 
@@ -1575,8 +1591,8 @@ _PartyMenuBattleText::
 	done
 
 _PartyMenuUseTMText::
-	text "Use TM on which"
-	line "#MON?"
+	text "Use machine on"	;joenote - HMs use this, so made it generic
+	line "which #MON?"
 	done
 
 _PartyMenuSwapMonText::
@@ -2751,6 +2767,16 @@ _BoxIsFullText::
 	line "a #MON CENTER!"
 	done
 
+_BoxIsFullReminderText::
+	text "The #MON BOX"
+	line "is now full."
+	cont "It won't hold"
+	cont "more #MON."
+	
+	para "Change the BOX at"
+	line "a #MON CENTER!"
+	prompt
+
 INCLUDE "text/maps/pallet_town.asm"
 INCLUDE "text/maps/viridian_city.asm"
 INCLUDE "text/maps/pewter_city.asm"
@@ -3135,7 +3161,11 @@ _AfterTrade2Text::
 	text " you"
 	line "traded to me"
 
-	para "went and evolved!"
+IF DEF(_BLUEJP)
+	para "went and evolved!"	;Blue-JP uses Kadabra so this makes sense
+ELSE
+	para "is learning fast!"	;joenote - fixed nonsense about evolving
+ENDC
 	done
 
 _WannaTrade3Text::
@@ -3194,7 +3224,11 @@ _UsedCutText::
 
 SECTION "Pokedex Text", ROMX, BANK[POKEDEX_TEXT]
 
+IF DEF(_REDGREENJP)
+INCLUDE "text/pokedexgreen.asm"
+ELSE
 INCLUDE "text/pokedex.asm"
+ENDC
 
 
 SECTION "Move Names", ROMX, BANK[MOVE_NAMES]

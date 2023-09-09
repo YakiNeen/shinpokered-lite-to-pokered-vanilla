@@ -56,7 +56,7 @@ PokemonTower2Script0:
 CoordsData_6055e:
 	db $05,$0F
 	db $06,$0E
-	db $0F ; isn't this supposed to end in $ff?
+	db $FF	;db $0F ; isn't this supposed to end in $ff?
 
 PokemonTower2Script1:
 	ld a, [wIsInBattle]
@@ -144,7 +144,14 @@ PokemonTower2Text1:
 	call SaveEndBattleTextPointers
 	ld a, OPP_SONY2
 	ld [wCurOpponent], a
-
+	
+	;joenote - deactivate skippable rival fights
+	;for the ss anne fight
+	ld a, $04
+	ld [wSSAnne2CurScript], a
+	;and the cerulean city fight
+	SetEvent EVENT_BEAT_CERULEAN_RIVAL
+	
 	; select which team to use during the encounter
 	ld a, [wRivalStarter]
 	cp STARTER2

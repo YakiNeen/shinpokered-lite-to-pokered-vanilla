@@ -1,6 +1,6 @@
 
 lb: MACRO ; r, hi, lo
-	ld \1, (\2) << 8 + ((\3) & $ff)
+	ld \1, ((\2) & $ff) << 8 + ((\3) & $ff) ;avoid left shift compiler warning ld \1, (\2) << 8 + ((\3) & $ff)
 ENDM
 
 homecall: MACRO
@@ -14,6 +14,12 @@ homecall: MACRO
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
 ENDM
+
+callbs: MACRO	;joenote - added from pokeyellow
+	ld a, BANK(\1)
+	call BankswitchCommon
+	call \1
+	ENDM
 
 farcall EQUS "callba"
 

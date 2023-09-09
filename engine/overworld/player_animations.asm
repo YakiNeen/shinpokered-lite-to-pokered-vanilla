@@ -88,6 +88,7 @@ PlayerSpinWhileMovingDown:
 	ld [hli], a ; wPlayerSpinWhileMovingUpOrDownAnimMaxY
 	call GetPlayerTeleportAnimFrameDelay
 	ld [hl], a ; wPlayerSpinWhileMovingUpOrDownAnimFrameDelay
+	ld hl, wFacingDirectionList 	;joenote - this line needs to be added or else the player will not rotate properly
 	jp PlayerSpinWhileMovingUpOrDown
 
 _LeaveMapAnim:
@@ -108,6 +109,7 @@ _LeaveMapAnim:
 	ld [hli], a ; wPlayerSpinWhileMovingUpOrDownAnimMaxY
 	call GetPlayerTeleportAnimFrameDelay
 	ld [hl], a ; wPlayerSpinWhileMovingUpOrDownAnimFrameDelay
+	ld hl, wFacingDirectionList 	;joenote - this line needs to be added or else the player will not rotate properly
 	call PlayerSpinWhileMovingUpOrDown
 	call IsPlayerStandingOnWarpPadOrHole
 	ld a, b
@@ -202,6 +204,10 @@ FlyAnimationScreenCoords2:
 	db $F0, $00
 
 LeaveMapThroughHoleAnim:
+	ld a, [wLastMusicSoundID]
+	cp MUSIC_BIKE_RIDING ; joenote - is the player riding the bike during the hole warp?
+	call z, PlayDefaultMusic	;if so, cancel the bike music
+	
 	ld a, $ff
 	ld [wUpdateSpritesEnabled], a ; disable UpdateSprites
 	; shift upper half of player's sprite down 8 pixels and hide lower half
@@ -386,9 +392,11 @@ FishingAnim:
 	call DelayFrames
 	ld hl, wd736
 	set 6, [hl] ; reserve the last 4 OAM entries
+	push af
 	ld de, RedSprite
-	ld hl, vNPCSprites
 	lb bc, BANK(RedSprite), $c
+	pop af
+	ld hl, vNPCSprites
 	call CopyVideoData
 	ld a, $4
 	ld hl, RedFishingTiles
@@ -506,6 +514,10 @@ _HandleMidJump:
 	ld a, [wPlayerJumpingYScreenCoordsIndex]
 	ld c, a
 	inc a
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;60fps - only update every other tick
+	call Ledge60fps
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	cp $10
 	jr nc, .finishedJump
 	ld [wPlayerJumpingYScreenCoordsIndex], a
@@ -532,6 +544,26 @@ _HandleMidJump:
 	res 7, [hl] ; not simulating joypad states any more
 	xor a
 	ld [wJoyIgnore], a
+	ret
+
+Ledge60fps:
+	push hl
+	push af
+	ld h, $c2
+	ld l, $0a
+	ld a, [wUnusedD721]
+	bit 4, a
+	ld a, [hl]
+	jr nz, .is60fps
+	xor a
+	jr .end
+.is60fps
+	xor $01
+.end
+	;ld [hl], a	;already updated during UpdatePlayerSprite.moving
+	pop af
+	sub [hl]
+	pop hl
 	ret
 
 PlayerJumpingYScreenCoords:

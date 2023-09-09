@@ -5,6 +5,8 @@ SetDefaultNames:
 	push af
 	ld a, [wd732]
 	push af
+	ld a, [wUnusedD721]	;joenote - preserve extra options
+	push af
 	ld hl, wPlayerName
 	ld bc, wBoxDataEnd - wPlayerName
 	xor a
@@ -13,6 +15,8 @@ SetDefaultNames:
 	ld bc, $200
 	xor a
 	call FillMemory
+	pop af
+	ld [wUnusedD721], a	;joenote - restore extra options
 	pop af
 	ld [wd732], a
 	pop af
@@ -32,16 +36,17 @@ SetDefaultNames:
 	jp CopyData
 
 OakSpeech:
+	call ClearScreen
+	call LoadTextBoxTilePatterns
+	call SetDefaultNames
+	predef InitPlayerData2
+	call RunDefaultPaletteCommand	;gbcnote - reinitialize the default palette in case the pointers got cleared
 	ld a, $FF
 	call PlaySound ; stop music
 	ld a, BANK(Music_Routes2)
 	ld c, a
 	ld a, MUSIC_ROUTES2
 	call PlayMusic
-	call ClearScreen
-	call LoadTextBoxTilePatterns
-	call SetDefaultNames
-	predef InitPlayerData2
 	ld hl, wNumBoxItems
 	ld a, POTION
 	ld [wcf91], a
@@ -70,13 +75,33 @@ OakSpeech:
 	call GetMonHeader
 	coord hl, 6, 4
 	call LoadFlippedFrontSpriteByMonIndex
-	call MovePicLeft
+	;call MovePicLeft
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;gbcnote - Nidorino needs its pal
+	ld a, %11100100
+	ld [rBGP], a
+	call UpdateGBCPal_BGP
+	
+	push af
+	push bc
+	push hl
+	push de
+	ld d, CONVERT_BGP
+	ld e, 0
+	callba TransferMonPal 
+	pop de
+	pop hl
+	pop bc
+	pop af
+	
+	call MovePicLeft_NoPalUpdate
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	ld hl, OakSpeechText2
 	call PrintText
 	call GBFadeOutToWhite
 	call ClearScreen
 	ld de, RedPicFront
-	lb bc, Bank(RedPicFront), $00
+	lb bc, BANK(RedPicFront), $00
 	call IntroDisplayPicCenteredOrUpperRight
 	call MovePicLeft
 	ld hl, IntroducePlayerText
@@ -95,7 +120,7 @@ OakSpeech:
 	call GBFadeOutToWhite
 	call ClearScreen
 	ld de, RedPicFront
-	lb bc, Bank(RedPicFront), $00
+	lb bc, BANK(RedPicFront), $00
 	call IntroDisplayPicCenteredOrUpperRight
 	call GBFadeInFromWhite
 	ld a, [wd72d]
@@ -176,6 +201,7 @@ FadeInIntroPic:
 .next
 	ld a, [hli]
 	ld [rBGP], a
+	call UpdateGBCPal_BGP
 	ld c, 10
 	call DelayFrames
 	dec b
@@ -191,12 +217,13 @@ IntroFadePalettes:
 	db %11100100
 
 MovePicLeft:
+	ld a, %11100100
+	ld [rBGP], a
+	call UpdateGBCPal_BGP
+MovePicLeft_NoPalUpdate: ;gbcnote - need the option to skip updating if needed
 	ld a, 119
 	ld [rWX], a
 	call DelayFrame
-
-	ld a, %11100100
-	ld [rBGP], a
 .next
 	call DelayFrame
 	ld a, [rWX]

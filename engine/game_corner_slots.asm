@@ -13,13 +13,14 @@ StartSlotMachine:
 	ld a, [wLuckySlotHiddenObjectIndex]
 	ld b, a
 	ld a, [wHiddenObjectIndex]
-	inc a
+	inc a	
 	cp b
 	jr z, .match
 	ld a, 253
 	jr .next
 .match
 	ld a, 250
+	
 .next
 	ld [wSlotMachineSevenAndBarModeChance], a
 	ld a, [H_LOADEDROMBANK]

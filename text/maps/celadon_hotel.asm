@@ -19,3 +19,4 @@ _CeladonHotelText3::
 	text "Why did she bring"
 	line "her brother?"
 	done
+	

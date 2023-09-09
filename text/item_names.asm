@@ -5,7 +5,7 @@ ItemNames:
 	db "POKé BALL@"
 	db "TOWN MAP@"
 	db "BICYCLE@"
-	db "?????@"
+	db "SURFBOARD@"	;joenote - give the surfboard it's fan name instead of ?????
 	db "SAFARI BALL@"
 	db "POKéDEX@"
 	db "MOON STONE@"
@@ -48,7 +48,7 @@ ItemNames:
 	db "LEAF STONE@"
 	db "CARD KEY@"
 	db "NUGGET@"
-	db "PP UP@"
+	db "PP UP@"	;unused PP_UP
 	db "POKé DOLL@"
 	db "FULL HEAL@"
 	db "REVIVE@"

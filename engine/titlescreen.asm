@@ -94,13 +94,23 @@ DisplayTitleScreen:
 
 ; put a pokeball in the player's hand
 	ld hl, wOAMBuffer + $28
+IF DEF(_REDGREENJP)
+	ld a, $70
+ELSE
 	ld a, $74
+ENDC
 	ld [hl], a
 
 ; place tiles for title screen copyright
+IF DEF(_REDGREENJP)
+	coord hl, 3, 17
+	ld de, .tileScreenCopyrightTiles
+	ld b, $0D
+ELSE
 	coord hl, 2, 17
 	ld de, .tileScreenCopyrightTiles
 	ld b, $10
+ENDC
 .tileScreenCopyrightTilesLoop
 	ld a, [de]
 	ld [hli], a
@@ -111,7 +121,13 @@ DisplayTitleScreen:
 	jr .next
 
 .tileScreenCopyrightTiles
+IF DEF(_REDGREENJP)
+	db $41,$43,$44,$45,$46,$47,$48,$49,$4A,$4B,$4C,$4D,$4E ; ©1995 GAME FREAK inc.
+ELIF DEF(_BLUEJP)
+	db $41,$42,$43,$44,$42,$43,$45,$46,$47,$48,$49,$4A,$4B,$4C,$4D,$4E ; ©'95.'96.'98 GAME FREAK inc.
+ELSE
 	db $41,$42,$43,$42,$44,$42,$45,$46,$47,$48,$49,$4A,$4B,$4C,$4D,$4E ; ©'95.'96.'98 GAME FREAK inc.
+ENDC
 
 .next
 	call SaveScreenTilesToBuffer2
@@ -123,7 +139,9 @@ ENDC
 IF DEF(_BLUE)
 	ld a, SQUIRTLE ; which Pokemon to show first on the title screen
 ENDC
-
+IF DEF(_GREEN)
+	ld a, BULBASAUR ; which Pokemon to show first on the title screen
+ENDC
 	ld [wTitleMonSpecies], a
 	call LoadTitleMonSprite
 	ld a, (vBGMap0 + $300) / $100
@@ -139,6 +157,13 @@ ENDC
 	call GBPalNormal
 	ld a, %11100100
 	ld [rOBP0], a
+	call UpdateGBCPal_OBP0
+	
+	push de
+	ld d, CONVERT_BGP
+	ld e, 2
+	callba TransferMonPal ;gbcnote - update the bg pal for the new title mon
+	pop de
 
 ; make pokemon logo bounce up and down
 	ld bc, hSCY ; background scroll Y
@@ -217,6 +242,16 @@ ENDC
 	xor a
 	ld [wUnusedCC5B], a
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;gbcnote - The tiles in the window need to be shifted so that the bottom
+;half of the title screen is in the top half of the window area.
+;This is accomplished by copying the tile map to vram at an offset.
+;The goal is to get the tile map for the bottom half of the title screen
+;resides in the BGMap1 address space (address $9c00).
+	ld a, (vBGMap0 + $300) / $100
+	call TitleScreenCopyTileMapToVRAM
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
 ; Keep scrolling in new mons indefinitely until the user performs input.
 .awaitUserInterruptionLoop
 	ld c, 200
@@ -278,7 +313,13 @@ TitleScreenPickNewMon:
 
 	ld [hl], a
 	call LoadTitleMonSprite
-
+	
+	push de
+	ld d, CONVERT_BGP
+	ld e, 2
+	callba TransferMonPal ;gbcnote - update the bg pal for the new title mon
+	pop de
+	
 	ld a, $90
 	ld [hWY], a
 	ld d, 1 ; scroll out
@@ -288,18 +329,20 @@ TitleScreenPickNewMon:
 TitleScreenScrollInMon:
 	ld d, 0 ; scroll in
 	callba TitleScroll
-	xor a
+	;xor a
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;gbcnote - The window normally covers the whole screen when picking a new title screen mon.
+;This is not desired since it applies BG pal 2 to the whole screen when on a gbc.
+;Instead, shift the window downwards by 40 tiles to just cover the version text and below.
+;This makes it so the map attributes for BGMap1 (address $9c00) are covering the bottom half 
+;of the screen.
+	ld a, $40
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	ld [hWY], a
 	ret
 
 ScrollTitleScreenGameVersion:
-.wait
-	ld a, [rLY]
-	cp l
-	jr nz, .wait
-
-	ld a, h
-	ld [rSCX], a
+	predef BGLayerScrollingUpdate	;joenote - consolidated into a predef that also fixes some issues
 
 .wait2
 	ld a, [rLY]
@@ -317,7 +360,11 @@ DrawPlayerCharacter:
 	xor a
 	ld [wPlayerCharacterOAMTile], a
 	ld hl, wOAMBuffer
+IF DEF(_REDGREENJP)
+	ld de, $6030
+ELSE
 	ld de, $605a
+ENDC
 	ld b, 7
 .loop
 	push de
@@ -331,6 +378,16 @@ DrawPlayerCharacter:
 	ld e, a
 	ld a, [wPlayerCharacterOAMTile]
 	ld [hli], a ; tile
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;gbcnote - set the palette for the player tiles
+;These bits only work on the GBC
+	push af
+	ld a, [hl]	;Attributes/Flags
+	and %11111000
+	or  %00000010
+	ld [hl], a
+	pop af
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	inc a
 	ld [wPlayerCharacterOAMTile], a
 	inc hl
@@ -353,7 +410,11 @@ ClearBothBGMaps:
 LoadTitleMonSprite:
 	ld [wcf91], a
 	ld [wd0b5], a
+IF DEF(_REDGREENJP)
+	coord hl, 9, 10
+ELSE
 	coord hl, 5, 10
+ENDC
 	call GetMonHeader
 	jp LoadFrontSpriteByMonIndex
 
@@ -372,14 +433,28 @@ LoadCopyrightTiles:
 	ld hl, vChars2 + $600
 	lb bc, BANK(NintendoCopyrightLogoGraphics), (GamefreakLogoGraphicsEnd - NintendoCopyrightLogoGraphics) / $10
 	call CopyVideoData
+IF DEF(_REDGREENJP)
+	coord hl, 5, 7
+ELSE
 	coord hl, 2, 7
+ENDC
 	ld de, CopyrightTextString
 	jp PlaceString
 
 CopyrightTextString:
+IF DEF(_REDGREENJP)
+	db   $60,$62,$63,$64,$65,$66,$67,$68,$69,$6A             ; ©1995 Nintendo
+	next $60,$62,$63,$64,$6B,$6C,$6D,$6E,$6F,$70,$71,$72     ; ©1995 Creatures inc.
+	next $60,$62,$63,$64,$73,$74,$75,$76,$77,$78,$79,$7A,$7B ; ©1995 GAME FREAK inc.
+ELIF DEF(_BLUEJP)
+	db   $60,$61,$62,$63,$61,$62,$64,$65,$66,$67,$68,$69,$6A             ; ©1995.1996 Nintendo
+	next $60,$61,$62,$63,$61,$62,$64,$6B,$6C,$6D,$6E,$6F,$70,$71,$72     ; ©1995.1996 Creatures inc.
+	next $60,$61,$62,$63,$61,$62,$64,$73,$74,$75,$76,$77,$78,$79,$7A,$7B ; ©1995.1996 GAME FREAK inc.
+ELSE
 	db   $60,$61,$62,$61,$63,$61,$64,$7F,$65,$66,$67,$68,$69,$6A             ; ©'95.'96.'98 Nintendo
 	next $60,$61,$62,$61,$63,$61,$64,$7F,$6B,$6C,$6D,$6E,$6F,$70,$71,$72     ; ©'95.'96.'98 Creatures inc.
 	next $60,$61,$62,$61,$63,$61,$64,$7F,$73,$74,$75,$76,$77,$78,$79,$7A,$7B ; ©'95.'96.'98 GAME FREAK inc.
+ENDC
 	db   "@"
 
 INCLUDE "data/title_mons.asm"
@@ -398,6 +473,8 @@ ENDC
 IF DEF(_BLUE)
 	db $61,$62,$63,$64,$65,$66,$67,$68,"@" ; "Blue Version"
 ENDC
-
+IF DEF(_GREEN)
+	db $62,$63,$64,$7F,$65,$66,$67,$68,$69,"@" ; "Green Version"
+ENDC
 NintenText: db "NINTEN@"
 SonyText:   db "SONY@"

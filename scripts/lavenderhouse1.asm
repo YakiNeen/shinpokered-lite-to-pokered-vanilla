@@ -110,3 +110,4 @@ MrFujiAfterFluteText:
 LavenderHouse1Text6:
 	TX_FAR _LavenderHouse1Text6
 	db "@"
+

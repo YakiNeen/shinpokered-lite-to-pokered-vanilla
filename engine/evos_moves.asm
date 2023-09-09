@@ -1,3 +1,5 @@
+
+
 ; try to evolve the mon in [wWhichPokemon]
 TryEvolvingMon:
 	ld hl, wCanEvolveFlags
@@ -9,7 +11,7 @@ TryEvolvingMon:
 	call Evolution_FlagAction
 
 ; this is only called after battle
-; it is supposed to do level up evolutions, though there is a bug that allows item evolutions to occur
+; it is supposed to do level up evolutions, though there is a bug that allows item evolutions to occur *fixed this bug*
 EvolutionAfterBattle:
 	ld a, [hTilesetType]
 	push af
@@ -20,6 +22,11 @@ EvolutionAfterBattle:
 	push hl
 	push bc
 	push de
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; wispnote - We keep a pointer to the current PKMN's Level at the Beginning of the Battle.
+	ld hl, wStartBattleLevels
+	push hl
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	ld hl, wPartyCount
 	push hl
 
@@ -27,11 +34,20 @@ Evolution_PartyMonLoop: ; loop over party mons
 	ld hl, wWhichPokemon
 	inc [hl]
 	pop hl
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; wispnote - We store current PKMN' Level at the Beginning of the Battle
+; to a chosen memory address in order to be compaired later with the evolution requirements.
+	pop de
+	ld a, [de]
+	ld [wTempCoins1], a
+	inc de
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	inc hl
 	ld a, [hl]
 	cp $ff ; have we reached the end of the party?
 	jp z, .done
 	ld [wEvoOldSpecies], a
+	push de; wispnote - If we are not done we need to push the pointer for the next iteration.
 	push hl
 	ld a, [wWhichPokemon]
 	ld c, a
@@ -92,10 +108,13 @@ Evolution_PartyMonLoop: ; loop over party mons
 	cp b ; is the mon's level greater than the evolution requirement?
 	jp c, Evolution_PartyMonLoop ; if so, go the next mon
 	jr .doEvolution
-.checkItemEvo
+.checkItemEvo	;joenote - .checkItemEvo updated to match pokemon yellow. this prevents erroneos stone evolutions
+	ld a, [wIsInBattle] ; are we in battle?
+	and a
 	ld a, [hli]
+	jp nz, .nextEvoEntry1 ; don't evolve if we're in a battle as wcf91 could be holding the last mon sent out
 	ld b, a ; evolution item
-	ld a, [wcf91] ; this is supposed to be the last item used, but it is also used to hold species numbers
+	ld a, [wcf91] ; *fixed above* this is supposed to be the last item used, but it is also used to hold species numbers
 	cp b ; was the evolution item in this entry used?
 	jp nz, .nextEvoEntry1 ; if not, go to the next evolution entry
 .checkLevel
@@ -104,10 +123,25 @@ Evolution_PartyMonLoop: ; loop over party mons
 	ld a, [wLoadedMonLevel]
 	cp b ; is the mon's level greater than the evolution requirement?
 	jp c, .nextEvoEntry2 ; if so, go the next evolution entry
-.doEvolution
+.doEvolution	
 	ld [wCurEnemyLVL], a
 	ld a, 1
 	ld [wEvolutionOccurred], a
+;a has 'mon current level. b has 'mon evo level requirement
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;joenote - fixing an oversigt where gaining multiple levels in battle then evolving can cause 
+;			learning moves of the new evolution to be skipped.
+			;need to store the evo level requirement somewhere.
+	;wTempCoins1 was chosen because it's used only for slot machine and gets defaulted to 1 during the mini-game
+; wispnote - We compare with PKMN's level at the Beginning of the Battle and keep the highest value.
+	ld a, [wTempCoins1]
+	cp b
+	jp nc, .evoLevelRequirementSatisfied
+	ld a, b
+	ld [wTempCoins1], a
+.evoLevelRequirementSatisfied
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 	push hl
 	ld a, [hl]
 	ld [wEvoNewSpecies], a
@@ -207,7 +241,35 @@ Evolution_PartyMonLoop: ; loop over party mons
 	ld [wd11e], a
 	xor a
 	ld [wMonDataLocation], a
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;joenote - fixing skip move-learn on level-up evolution
+	ld a, [wIsInBattle]
+	and a
+	jr z, .notinbattle
+	push bc
+	
+	ld a, [wCurEnemyLVL]	; load the final level into a.
+	ld c, a	; load the final level to over to c
+	ld a, [wTempCoins1]	; load the evolution level into a
+	ld b, a	; load the evolution level over to b
+	dec b
+.inc_level	; marker for looping back 
+	inc b	;increment 	the current evolution level
+	ld a, b	;put the evolution level in a
+	ld [wCurEnemyLVL], a	;and reset the final level to the evolution level
+	push bc	;save b & c on the stack as they hold the currently tracked evolution level a true final level
 	call LearnMoveFromLevelUp
+	pop bc	;get the current evolution and final level values back from the stack
+	ld a, b	;load the current evolution level into a
+	cp c	;compare it with the final level
+	jr nz, .inc_level	;loop back again if final level has not been reached
+	
+	pop bc
+	jr .skipfix_end
+.notinbattle
+	call LearnMoveFromLevelUp
+.skipfix_end
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 	pop hl
 	predef SetPartyMonTypes
 	ld a, [wIsInBattle]
@@ -317,6 +379,7 @@ Evolution_ReloadTilesetTilePatterns:
 	ret z
 	jp ReloadTilesetTilePatterns
 
+;joenote - this has been modified to allow for learning multiple moves at the same level
 LearnMoveFromLevelUp:
 	ld hl, EvosMovesPointerTable
 	ld a, [wd11e] ; species
@@ -344,6 +407,10 @@ LearnMoveFromLevelUp:
 	cp b ; is the move learnt at the mon's current level?
 	ld a, [hli] ; move ID
 	jr nz, .learnSetLoop
+	
+;the move can indeed be learned at this level
+.confirmlearnmove
+	push hl	
 	ld d, a ; ID of move to learn
 	ld a, [wMonDataLocation]
 	and a
@@ -361,7 +428,7 @@ LearnMoveFromLevelUp:
 .checkCurrentMovesLoop ; check if the move to learn is already known
 	ld a, [hli]
 	cp d
-	jr z, .done ; if already known, jump
+	jr z, .movesloop_done ; if already known, jump
 	dec b
 	jr nz, .checkCurrentMovesLoop
 	ld a, d
@@ -370,6 +437,11 @@ LearnMoveFromLevelUp:
 	call GetMoveName
 	call CopyStringToCF4B
 	predef LearnMove
+.movesloop_done
+	pop hl
+	jr .learnSetLoop
+	
+	
 .done
 	ld a, [wcf91]
 	ld [wd11e], a
@@ -510,4 +582,5 @@ WriteMonMoves_ShiftMoveData:
 Evolution_FlagAction:
 	predef_jump FlagActionPredef
 
+	
 INCLUDE "data/evos_moves.asm"

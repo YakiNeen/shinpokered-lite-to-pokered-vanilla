@@ -38,7 +38,7 @@ OaksLabScript0:
 	ret nz
 	ld a, HS_OAKS_LAB_OAK_2
 	ld [wMissableObjectIndex], a
-	predef ShowObject
+	predef ShowObject2
 	ld hl, wd72e
 	res 4, [hl]
 
@@ -115,7 +115,7 @@ OaksLabScript4:
 	ld a, SPRITE_FACING_UP
 	ld [hSpriteFacingDirection], a
 	call SetSpriteFacingDirectionAndDelay
-	call UpdateSprites
+	;call UpdateSprites
 	ld hl, wFlags_D733
 	res 1, [hl]
 	call PlayDefaultMusic
@@ -191,10 +191,16 @@ OaksLabScript7:
 	ret
 
 OaksLabScript8:
-	ld a, [wPlayerStarter]
-	cp STARTER1
-	jr z, .Charmander
+	;ld a, [wPlayerStarter]
+	;cp STARTER1
+	;jr z, .Charmander
+	;cp STARTER2
+	;jr z, .Squirtle
+	;jr .Bulbasaur
+	ld a, [wRivalStarterTemp]
 	cp STARTER2
+	jr z, .Charmander
+	cp STARTER3
 	jr z, .Squirtle
 	jr .Bulbasaur
 .Charmander
@@ -635,9 +641,12 @@ OaksLabScript17:
 	SetEvent EVENT_1ST_ROUTE22_RIVAL_BATTLE
 	ResetEventReuseHL EVENT_2ND_ROUTE22_RIVAL_BATTLE
 	SetEventReuseHL EVENT_ROUTE22_RIVAL_WANTS_BATTLE
-	ld a, HS_ROUTE_22_RIVAL_1
-	ld [wMissableObjectIndex], a
-	predef ShowObject
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; wispnote - Move this routine to be executed upon encounter.
+	; ld a, HS_ROUTE_22_RIVAL_1
+	; ld [wMissableObjectIndex], a
+	; predef ShowObject
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	ld a, $5
 	ld [wPalletTownCurScript], a
 	xor a
@@ -798,6 +807,7 @@ OaksLabText2:
 	ld [wRivalStarterTemp], a
 	ld a, $3
 	ld [wRivalStarterBallSpriteIndex], a
+PlayerStarter1Label::
 	ld a, STARTER1
 	ld b, $2
 	jr OaksLabScript_1d133
@@ -808,6 +818,7 @@ OaksLabText3:
 	ld [wRivalStarterTemp], a
 	ld a, $4
 	ld [wRivalStarterBallSpriteIndex], a
+PlayerStarter2Label::
 	ld a, STARTER2
 	ld b, $3
 	jr OaksLabScript_1d133
@@ -818,6 +829,7 @@ OaksLabText4:
 	ld [wRivalStarterTemp], a
 	ld a, $2
 	ld [wRivalStarterBallSpriteIndex], a
+PlayerStarter3Label::
 	ld a, STARTER3
 	ld b, $4
 
@@ -1231,3 +1243,4 @@ OaksLabText10:
 OaksLabText_1d405:
 	TX_FAR _OaksLabText_1d405
 	db "@"
+

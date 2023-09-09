@@ -13,7 +13,7 @@ VermilionCityObject:
 	warp 7, 3, 0, VERMILION_HOUSE_2
 
 	db 7 ; signs
-	sign 27, 3, 7 ; VermilionCityText7
+	sign 27, 3, 15 ; VermilionCityText7	
 	sign 37, 13, 8 ; VermilionCityText8
 	sign 24, 13, 9 ; MartSignText
 	sign 12, 3, 10 ; PokeCenterSignText

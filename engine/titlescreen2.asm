@@ -68,13 +68,7 @@ _TitleScroll:
 	jr _TitleScroll
 
 .ScrollBetween:
-.wait
-	ld a, [rLY] ; rLY
-	cp l
-	jr nz, .wait
-
-	ld a, h
-	ld [rSCX], a
+	predef BGLayerScrollingUpdate	;joenote - consolidated into a predef that also fixes some issues
 
 .wait2
 	ld a, [rLY] ; rLY
@@ -85,7 +79,11 @@ _TitleScroll:
 TitleBallYTable:
 ; OBJ y-positions for the Poke Ball held by Red in the title screen.
 ; This is really two 0-terminated lists. Initiated with an index of 1.
+IF DEF(_REDGREENJP)
+	db 0, $70, 0
+ELSE
 	db 0, $71, $6f, $6e, $6d, $6c, $6d, $6e, $6f, $71, $74, 0
+ENDC
 
 TitleScreenAnimateBallIfStarterOut:
 ; Animate the TitleBall if a starter just got scrolled out.

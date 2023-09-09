@@ -63,6 +63,7 @@ VermilionDock_1db9b:
 	ld [H_AUTOBGTRANSFERENABLED], a
 	ld [wSSAnneSmokeDriftAmount], a
 	ld [rOBP1], a
+	call UpdateGBCPal_OBP1
 	ld a, 88
 	ld [wSSAnneSmokeX], a
 	ld hl, wMapViewVRAMPointer
@@ -167,11 +168,7 @@ VermilionDock_1dc7c:
 	ld h, $0
 	ld l, $80
 .asm_1dc86
-	ld a, [rLY]
-	cp l
-	jr nz, .asm_1dc86
-	ld a, h
-	ld [rSCX], a
+	predef BGLayerScrollingUpdate	;joenote - consolidated into a predef that also fixes some issues
 .asm_1dc8e
 	ld a, [rLY]
 	cp h
@@ -206,6 +203,7 @@ VermilionDock_EraseSSAnne:
 	ld c, 120
 	call DelayFrames
 	ret
+
 
 VermilionDockTextPointers:
 	dw VermilionDockText1

@@ -8,7 +8,7 @@ VermilionDockObject:
 	db 0 ; signs
 
 	db 0 ; objects
-
+	
 	; warp-to
 	warp_to 14, 0, VERMILION_DOCK_WIDTH
 	warp_to 14, 2, VERMILION_DOCK_WIDTH ; SS_ANNE_1

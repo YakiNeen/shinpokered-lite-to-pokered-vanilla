@@ -10,7 +10,7 @@ MapHSPointers:
 	dw MapHS02
 	dw MapHS03
 	dw MapHSXX
-	dw MapHSXX
+	dw MapHSXX	
 	dw MapHSXX
 	dw MapHSXX
 	dw MapHSXX
@@ -124,12 +124,12 @@ MapHSPointers:
 	dw MapHSXX
 	dw MapHSXX
 	dw MapHSXX
+	dw MapHSXX	
+	dw MapHS78	
+	dw MapHSXX	
 	dw MapHSXX
-	dw MapHS78
 	dw MapHSXX
-	dw MapHSXX
-	dw MapHSXX
-	dw MapHSXX
+	dw MapHSXX	
 	dw MapHSXX
 	dw MapHSXX
 	dw MapHSXX
@@ -573,5 +573,5 @@ MapHSA2:
 	db SEAFOAM_ISLANDS_5,$01,Hide
 	db SEAFOAM_ISLANDS_5,$02,Hide
 	db SEAFOAM_ISLANDS_5,$03,Show
-
+	
 	db $FF,$01,Show

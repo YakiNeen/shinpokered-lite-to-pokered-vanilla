@@ -74,7 +74,7 @@ CeladonMart3Text5:
 	TX_FAR _CeladonMart3Text5
 	db "@"
 
-CeladonMart3Text12
+CeladonMart3Text12:
 CeladonMart3Text10:
 CeladonMart3Text8:
 CeladonMart3Text6:
@@ -106,3 +106,4 @@ CeladonMart3Text16:
 CeladonMart3Text15:
 	TX_FAR _CeladonMart3Text15
 	db "@"
+

@@ -104,11 +104,13 @@ ViridianGymArrowMovement7:
 ViridianGymArrowMovement8:
 	db D_RIGHT,$09,$FF
 
-ViridianGymArrowMovement9:
-	db D_UP,$08,$FF
-
-ViridianGymArrowMovement10:
+ViridianGymArrowMovement9:	;joenote - swapped the stop-tiles associated with arrow movement 9 and 10,
+	;db D_UP,$08,$FF		;so the movement distance needs to be swapped as well
 	db D_UP,$06,$FF
+	
+ViridianGymArrowMovement10:
+	;db D_UP,$06,$FF
+	db D_UP,$08,$FF
 
 ViridianGymArrowMovement11:
 	db D_LEFT,$06,$FF
@@ -156,15 +158,18 @@ ViridianGymScript3_74995:
 .asm_749be
 	ld hl, wObtainedBadges
 	set 7, [hl]
-	ld hl, wBeatGymFlags
-	set 7, [hl]
+	;ld hl, wBeatGymFlags	;joenote - redundant
+	;set 7, [hl]
 
 	; deactivate gym trainers
 	SetEventRange EVENT_BEAT_VIRIDIAN_GYM_TRAINER_0, EVENT_BEAT_VIRIDIAN_GYM_TRAINER_7
 
-	ld a, HS_ROUTE_22_RIVAL_2
-	ld [wMissableObjectIndex], a
-	predef ShowObject
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; wispnote - Move this routine to be executed upon encounter.
+	; ld a, HS_ROUTE_22_RIVAL_2
+	; ld [wMissableObjectIndex], a
+	; predef ShowObject
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	SetEvents EVENT_2ND_ROUTE22_RIVAL_BATTLE, EVENT_ROUTE22_RIVAL_WANTS_BATTLE
 	jp ViridianGymScript_748d6
 
@@ -306,7 +311,8 @@ ViridianGymText_74ace:
 
 ViridianGymText_74ad3:
 	TX_FAR _ViridianGymText_74ad3
-	TX_SFX_LEVEL_UP ; probably supposed to play SFX_GET_ITEM_1 but the wrong music bank is loaded
+	;TX_SFX_LEVEL_UP ; probably supposed to play SFX_GET_ITEM_1 but the wrong music bank is loaded
+	TX_SFX_KEY_ITEM	;joenote - play an unused sfx instead (triggered by playing GET_KEY_ITEM in battle)
 	db "@"
 
 ViridianGymText_74ad9:

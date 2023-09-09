@@ -62,8 +62,8 @@ CeladonGymText_48963:
 .asm_4898c
 	ld hl, wObtainedBadges
 	set 3, [hl]
-	ld hl, wBeatGymFlags
-	set 3, [hl]
+	;ld hl, wBeatGymFlags	;joenote - redundant
+	;set 3, [hl]
 
 	; deactivate gym trainers
 	SetEventRange EVENT_BEAT_CELADON_GYM_TRAINER_0, EVENT_BEAT_CELADON_GYM_TRAINER_6
@@ -188,6 +188,7 @@ CeladonGymText_48a5e:
 
 CeladonGymText_48a63:
 	TX_FAR _CeladonGymText_48a63
+	TX_SFX_KEY_ITEM	;joenote - play an unused sfx instead (triggered by playing GET_KEY_ITEM in battle)
 	db "@"
 
 CeladonGymText_48a68:

@@ -9,3 +9,8 @@ UndergroundPathEntranceRoute7TextPointers:
 UndergroundPathEntranceRoute7Text1:
 	TX_FAR _UndergroundPathEntRoute7Text1
 	db "@"
+
+
+	
+
+

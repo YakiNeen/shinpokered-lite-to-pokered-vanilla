@@ -8,7 +8,7 @@ PayDayEffect_:
 	jr z, .payDayEffect
 	ld a, [wEnemyMonLevel]
 .payDayEffect
-; level * 2
+;level * 2
 	add a
 	ld [H_DIVIDEND + 3], a
 	xor a

@@ -62,8 +62,8 @@ SaffronGymText_5d068:
 .asm_5d091
 	ld hl, wObtainedBadges
 	set 5, [hl]
-	ld hl, wBeatGymFlags
-	set 5, [hl]
+	;ld hl, wBeatGymFlags	;joenote - redundant
+	;set 5, [hl]
 
 	; deactivate gym trainers
 	SetEventRange EVENT_BEAT_SAFFRON_GYM_TRAINER_0, EVENT_BEAT_SAFFRON_GYM_TRAINER_6
@@ -188,6 +188,7 @@ SaffronGymText_5d162:
 
 SaffronGymText_5d167:
 	TX_FAR _SaffronGymText_5d167
+	;joenote - now plays an unused item sfx for getting a badge
 	TX_SFX_KEY_ITEM ; actually plays the second channel of SFX_BALL_POOF due to the wrong music bank being loaded
 	TX_BLINK
 	db "@"

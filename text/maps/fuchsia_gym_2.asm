@@ -12,7 +12,7 @@ _KogaExplainToxicText::
 _FuchsiaGymText9::
 	text "Now that you have"
 	line "the SOULBADGE,"
-	cont "the DEFENSE of"
+	cont "the SPEED of"	;joenote - changed DEFENSE to SPEED in order to fix a typo
 	cont "your #MON"
 	cont "increases!"
 
@@ -143,7 +143,7 @@ _FuchsiaGymEndBattleText5::
 _FuchsiaGymAfterBattleText5::
 	text "I still have much"
 	line "to learn!"
-	done
+	done	
 
 _FuchsiaGymBattleText6::
 	text "Master KOGA comes"

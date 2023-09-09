@@ -7,7 +7,9 @@ UndergroundPathWEObject:
 
 	db 0 ; signs
 
+
 	db 0 ; objects
+
 
 	; warp-to
 	warp_to 2, 5, UNDERGROUND_PATH_WE_WIDTH ; PATH_ENTRANCE_ROUTE_7

@@ -84,6 +84,7 @@ HiddenObjectMaps:
 	db VERMILION_CITY
 	db CERULEAN_CITY
 	db ROUTE_4
+	db VERMILION_DOCK
 	db $FF
 
 HiddenObjectPointers:
@@ -173,6 +174,7 @@ HiddenObjectPointers:
 	dw VermilionCityHiddenObjects
 	dw CeruleanCityHiddenObjects
 	dw Route4HiddenObjects
+	dw VermilionDockHiddenObjects
 
 ; format: y-coord, x-coord, text id/item id, object routine
 TradeCenterHiddenObjects:
@@ -606,7 +608,7 @@ Route13HiddenObjects:
 	dbw BANK(HiddenItems),HiddenItems
 	db $FF
 SafariZoneEntranceHiddenObjects:
-	db $01,$0a,NUGGET
+	db $05,$05,NUGGET	;joenote - moved to within map bounds
 	dbw BANK(HiddenItems),HiddenItems
 	db $FF
 SafariZoneWestHiddenObjects:
@@ -849,5 +851,13 @@ CeruleanCityHiddenObjects:
 	db $FF
 Route4HiddenObjects:
 	db $03,$28,GREAT_BALL
+	dbw BANK(HiddenItems),HiddenItems
+	db $FF
+VermilionDockHiddenObjects: ;joenote - added some hidden goodies
+	db $00,$15,SURFBOARD
+	dbw BANK(HiddenItems),HiddenItems	;joenote - added hidden surfboard
+	db $01,$01,NUGGET
+	dbw BANK(HiddenItems),HiddenItems
+	db $0A,$1B,TM_15
 	dbw BANK(HiddenItems),HiddenItems
 	db $FF

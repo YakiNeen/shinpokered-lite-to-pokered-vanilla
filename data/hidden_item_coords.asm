@@ -1,5 +1,5 @@
 HiddenItemCoords:
-; map ID, then coords
+; map ID, y-coord, x-coord
 	db VIRIDIAN_FOREST,$12,$01
 	db VIRIDIAN_FOREST,$2a,$10
 	db MT_MOON_3,$0c,$12
@@ -16,7 +16,7 @@ HiddenItemCoords:
 	db ROUTE_13,$0e,$01
 	db ROUTE_13,$0d,$10
 	db MANSION_4,$09,$01
-	db SAFARI_ZONE_ENTRANCE,$01,$0a
+	db SAFARI_ZONE_ENTRANCE,$05,$05	;joenote - moved this back into the map
 	db SAFARI_ZONE_WEST,$05,$06
 	db SILPH_CO_5F,$03,$0c
 	db SILPH_CO_9F,$0f,$02
@@ -54,4 +54,7 @@ HiddenItemCoords:
 	db VERMILION_CITY,$0b,$0e
 	db CERULEAN_CITY,$08,$0f
 	db ROUTE_4,$03,$28
+	db VERMILION_DOCK,$00,$15	;joenote - added hidden surfboard and some other dock goodies
+	db VERMILION_DOCK,$01,$01
+	db VERMILION_DOCK,$0A,$1B
 	db $ff

@@ -79,7 +79,7 @@ TypeEffects:
 	db ROCK,BUG,20
 	db ROCK,ICE,20
 	db GHOST,NORMAL,00
-	db GHOST,PSYCHIC,00
+	db GHOST,PSYCHIC,20	;ghost was always supposed to by 2x vs psychic
 	db FIRE,DRAGON,05
 	db WATER,DRAGON,05
 	db ELECTRIC,DRAGON,05

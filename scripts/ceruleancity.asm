@@ -87,7 +87,7 @@ CeruleanCityScript0:
 .asm_19535
 	ld a, HS_CERULEAN_RIVAL
 	ld [wMissableObjectIndex], a
-	predef ShowObject
+	predef ShowObject2
 	ld de, CeruleanCityMovement1
 	ld a, $1
 	ld [H_SPRITEINDEX], a
@@ -304,6 +304,7 @@ CeruleanCityText2:
 	jr c, .Success
 	ld hl, TM28NoRoomText
 	call PrintText
+	callba CeruleanMoveGuardOnly	;joenote - move just the guard to prevent getting stuck in the front door
 	jr .Done
 .Success
 	ld a, $1

@@ -20,7 +20,7 @@ TryDoWildEncounter:
 	and a
 	jr z, .next
 	dec a
-	jr z, .lastRepelStep
+	jp z, .lastRepelStep
 	ld [wRepelRemainingSteps], a
 .next
 ; determine if wild pokemon can appear in the half-block we're standing in
@@ -64,12 +64,12 @@ TryDoWildEncounter:
 ; determine which wild pokemon (grass or water) can appear in the half-block we're standing in
 	ld c, [hl]
 	ld hl, wGrassMons
-	aCoord 8, 9
-	cp $14 ; is the bottom left tile (8,9) of the half-block we're standing in a water tile?
-	jr nz, .gotWildEncounterType ; else, it's treated as a grass tile by default
+	aCoord 9, 9 ;joenote - change this to (9,9) to refer to bottom right tile instead of bottom left (8,9 as originally)
+	cp $14 ; is the bottom right tile (9,9) of the half-block we're standing in a water tile?
+	jr nz, .gotWildEncounterType ; if not, it's treated as a grass tile by default
 	ld hl, wWaterMons
-; since the bottom right tile of a "left shore" half-block is $14 but the bottom left tile is not,
-; "left shore" half-blocks (such as the one in the east coast of Cinnabar) load grass encounters.
+; since the bottom right tile of a "left shore" half-block used to be $14 but the bottom left tile was not,
+; "left shore" half-blocks (such as the one in the east coast of Cinnabar) loaded grass encounters & gave missingno.
 .gotWildEncounterType
 	ld b, 0
 	add hl, bc

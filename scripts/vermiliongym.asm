@@ -81,8 +81,8 @@ VermilionGymScript_5caaa:
 .asm_5cad3
 	ld hl, wObtainedBadges
 	set 2, [hl]
-	ld hl, wBeatGymFlags
-	set 2, [hl]
+	;ld hl, wBeatGymFlags	;joenote - redundant
+	;set 2, [hl]
 
 	; deactivate gym trainers
 	SetEventRange EVENT_BEAT_VERMILION_GYM_TRAINER_0, EVENT_BEAT_VERMILION_GYM_TRAINER_2
@@ -178,7 +178,8 @@ VermilionGymText6:
 
 VermilionGymText7:
 	TX_FAR _ReceivedTM24Text
-	TX_SFX_KEY_ITEM
+	;TX_SFX_KEY_ITEM	;joenote - wrong SFX played
+	TX_SFX_ITEM_1
 	TX_FAR _TM24ExplanationText
 	db "@"
 
@@ -188,6 +189,7 @@ VermilionGymText8:
 
 ReceivedThunderbadgeText:
 	TX_FAR _ReceivedThunderbadgeText
+	TX_SFX_KEY_ITEM	;joenote - play an unused sfx instead (triggered by playing GET_KEY_ITEM in battle)
 	db "@"
 
 VermilionGymText2:
@@ -246,7 +248,7 @@ VermilionGymAfterBattleText3:
 
 VermilionGymText5:
 	TX_ASM
-	ld a, [wBeatGymFlags]
+	ld a, [wObtainedBadges];[wBeatGymFlags]
 	bit 2, a
 	jr nz, .asm_5cbeb
 	ld hl, VermilionGymText_5cbf4

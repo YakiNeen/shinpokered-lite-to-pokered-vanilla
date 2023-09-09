@@ -59,12 +59,17 @@ PlaceNextChar::
 	ret
 
 Char4ETest::
+	;joenote - add Rangi's line-feed implementation
+	cp "<LF>"
+	jr z, .line_feed
+	
 	cp $4E ; next
 	jr nz, .char4FTest
 	ld bc, 2 * SCREEN_WIDTH
 	ld a, [hFlags_0xFFF6]
 	bit 2, a
 	jr z, .ok
+.line_feed
 	ld bc, SCREEN_WIDTH
 .ok
 	pop hl
@@ -365,7 +370,7 @@ TextCommandProcessor::
 	push af
 	set 1, a
 	ld e, a
-	ld a, [$fff4]
+	ld a, [hClearLetterPrintingDelayFlags]
 	xor e
 	ld [wLetterPrintingDelayFlags], a
 	ld a, c
@@ -581,7 +586,7 @@ TextCommand0A::
 ; plays sounds
 ; this actually handles various command ID's, not just 0B
 ; (no arguments)
-TextCommand0B::
+TextCommand0B::	;joenote - modified to make SFX_GET_KEY_ITEM play a previously unused sound effect in battle (for getting a badge)
 	pop hl
 	push bc
 	dec hl
@@ -602,9 +607,13 @@ TextCommand0B::
 	jr z, .pokemonCry
 	cp $16
 	jr z, .pokemonCry
+	cp $11
+	jr z, .keyitem
+.playnormally
 	ld a, [hl]
 	call PlaySound
 	call WaitForSoundToFinish
+.finishnormally
 	pop hl
 	pop bc
 	jp NextTextCommand
@@ -616,6 +625,21 @@ TextCommand0B::
 	pop hl
 	pop bc
 	jp NextTextCommand
+.keyitem
+	push de
+	ld a, [wAudioROMBank]
+	cp BANK(Audio2_PlaySound)
+	pop de
+	jr nz, .playnormally	;don't do anything special if we're not in audio bank 2
+	push de
+	callba Music_GetKeyItemInBattle
+.musicWaitLoop ; wait for music to finish playing
+	ld a, [wChannelSoundIDs + Ch6]
+	and a ; music off?
+	jr nz, .musicWaitLoop
+	pop de
+	jr .finishnormally
+	
 
 ; format: text command ID, sound ID or cry ID
 TextCommandSounds::
@@ -626,7 +650,7 @@ TextCommandSounds::
 	db $10, SFX_GET_ITEM_2
 	db $11, SFX_GET_KEY_ITEM
 	db $13, SFX_DEX_PAGE_ADDED
-	db $14, NIDORINA ; used in OakSpeech
+	db $14, NIDORINO ; used in OakSpeech	(joenote - corrected from Nidorina)
 	db $15, PIDGEOT  ; used in SaffronCityText12
 	db $16, DEWGONG  ; unused?
 

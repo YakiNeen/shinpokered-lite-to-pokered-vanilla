@@ -62,16 +62,18 @@ PewterGymScript_5c3df:
 .asm_5c408
 	ld hl, wObtainedBadges
 	set 0, [hl]
-	ld hl, wBeatGymFlags
-	set 0, [hl]
+	;ld hl, wBeatGymFlags	;joenote - redundant
+	;set 0, [hl]
 
 	ld a, HS_GYM_GUY
 	ld [wMissableObjectIndex], a
 	predef HideObject
+
+	;if the first route 22 rival battle was skipped, clear the events and hide the associated npc
+	;joenote - have to have this if the battle was skipped
 	ld a, HS_ROUTE_22_RIVAL_1
 	ld [wMissableObjectIndex], a
 	predef HideObject
-
 	ResetEvents EVENT_1ST_ROUTE22_RIVAL_BATTLE, EVENT_ROUTE22_RIVAL_WANTS_BATTLE
 
 	; deactivate gym trainers
@@ -158,7 +160,8 @@ PewterGymText6:
 
 PewterGymText_5c4bc:
 	TX_FAR _PewterGymText_5c4bc
-	TX_SFX_LEVEL_UP ; probably supposed to play SFX_GET_ITEM_1 but the wrong music bank is loaded
+	;TX_SFX_LEVEL_UP ; probably supposed to play SFX_GET_ITEM_1 but the wrong music bank is loaded
+	TX_SFX_KEY_ITEM	;joenote - play an unused sfx instead (triggered by playing GET_KEY_ITEM in battle)
 	TX_FAR _PewterGymText_5c4c1
 	db "@"
 
@@ -182,7 +185,7 @@ PewterGymAfterBattleText1:
 
 PewterGymText3:
 	TX_ASM
-	ld a, [wBeatGymFlags]
+	ld a, [wObtainedBadges];[wBeatGymFlags]
 	bit 0, a
 	jr nz, .asm_5c50c
 	ld hl, PewterGymText_5c515

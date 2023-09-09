@@ -153,6 +153,7 @@ VermilionCityText_198ac:
 	TX_FAR _VermilionCityText_198ac
 	db "@"
 
+
 VermilionCityText3:
 	TX_ASM
 	CheckEvent EVENT_SS_ANNE_LEFT
@@ -255,3 +256,4 @@ VermilionCityText12:
 VermilionCityText13:
 	TX_FAR _VermilionCityText13
 	db "@"
+

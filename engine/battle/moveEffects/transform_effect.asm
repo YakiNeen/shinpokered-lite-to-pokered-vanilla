@@ -1,14 +1,15 @@
 TransformEffect_:
+;joenote - setting the transform bit has been moved to later on
 	ld hl, wBattleMonSpecies
 	ld de, wEnemyMonSpecies
-	ld bc, wEnemyBattleStatus3
+;	ld bc, wEnemyBattleStatus3
 	ld a, [wEnemyBattleStatus1]
 	ld a, [H_WHOSETURN]
 	and a
 	jr nz, .hitTest
 	ld hl, wEnemyMonSpecies
 	ld de, wBattleMonSpecies
-	ld bc, wPlayerBattleStatus3
+;	ld bc, wPlayerBattleStatus3
 	ld [wPlayerMoveListIndex], a
 	ld a, [wPlayerBattleStatus1]
 .hitTest
@@ -16,7 +17,7 @@ TransformEffect_:
 	jp nz, .failed
 	push hl
 	push de
-	push bc
+;	push bc
 	ld hl, wPlayerBattleStatus2
 	ld a, [H_WHOSETURN]
 	and a
@@ -42,10 +43,10 @@ TransformEffect_:
 	ld b, BANK(ReshowSubstituteAnim)
 	pop af
 	call nz, Bankswitch
-	pop bc
-	ld a, [bc]
-	set TRANSFORMED, a ; mon is now transformed
-	ld [bc], a
+;	pop bc
+;	ld a, [bc]
+;	set TRANSFORMED, a ; mon is now transformed
+;	ld [bc], a
 	pop de
 	pop hl
 	push hl
@@ -56,18 +57,33 @@ TransformEffect_:
 ; type 1, type 2, catch rate, and moves
 	ld bc, $5
 	add hl, bc
-	inc de
-	inc de
-	inc de
-	inc de
-	inc de
+	inc de	;point to hp low byte
+	inc de	;point to hp high byte
+	inc de	;point to party position
+	inc de	;point to status
+	inc de	;point to type 1
 	inc bc
 	inc bc
-	call CopyData
+	;call CopyData
+	call CopyDataTransform	;joenote - want to do a special copy that doesn't copy the transform move and replaces it
+	;de is now pointing to DVs
 	ld a, [H_WHOSETURN]
 	and a
+	push af	;joenote - save the turn result
+	ld bc, wPlayerBattleStatus3
 	jr z, .next
 ; save enemy mon DVs at wTransformedEnemyMonOriginalDVs
+; joenote - there is a bug here. It assumes the enemy mon is not transformed already.
+; If the enemy has already transformed once before, then the DVs for that form 
+; end up getting written to wTransformedEnemyMonOriginalDVs.
+; This causes the true original untransformed DVs to be overwritten with the DVs of 
+; the prior form. Further transformations will continue to overwrite this with the DVs
+; of the last form  utilized.
+; Therefore, a check is needed to skip this if the enemy is already transformed.
+	ld bc, wEnemyBattleStatus3
+	ld a, [bc]
+	bit 3, a 	;check the state of the enemy transformed bit
+	jr nz, .next	;skip ahead if bit is set
 	ld a, [de]
 	ld [wTransformedEnemyMonOriginalDVs], a
 	inc de
@@ -75,6 +91,24 @@ TransformEffect_:
 	ld [wTransformedEnemyMonOriginalDVs + 1], a
 	dec de
 .next
+	ld a, [bc]
+	set TRANSFORMED, a ; mon is now transformed
+	ld [bc], a
+
+;joenote - handle a conflict with disable
+	pop af	;get the saved turn result
+	jr nz, .undo_enemy_disable
+.undo_player_disable
+	xor a
+	ld [wPlayerDisabledMove], a
+	ld [wPlayerDisabledMoveNumber], a
+	jr .undo_disable_end
+.undo_enemy_disable
+	xor a
+	ld [wEnemyDisabledMove], a
+	ld [wEnemyDisabledMoveNumber], a
+.undo_disable_end
+	
 ; DVs
 	ld a, [hli]
 	ld [de], a
@@ -146,3 +180,24 @@ TransformEffect_:
 TransformedText:
 	TX_FAR _TransformedText
 	db "@"
+
+;joenote - custom-edited function just for copying transform moves.
+;Insted of copying the move Transform, it will replace it with Struggle.
+;This prevents endless battles between two pokemon with Transform
+CopyDataTransform:
+; Copy bc bytes from hl to de.
+	ld a, c	;load counter into a
+	cp $5 ;is a < 5? set carry if true
+	ld a, [hli] ;load current byte into a. increment to next byte
+	jr nc, .notatrans	;skip down if carry not set
+	cp TRANSFORM	;is the current byte the transform move?
+	jr nz, .notatrans	; if not, then skip down
+	ld a, STRUGGLE	;if transform move, replace it with Struggle
+.notatrans
+	ld [de], a	;load a into de
+	inc de	;increment de to next byte
+	dec bc	;decrement the counter
+	ld a, c
+	or b	;is counter zero?
+	jr nz, CopyDataTransform
+	ret

@@ -9,7 +9,7 @@ DrawHP2:
 	call GetPredefRegisters
 	ld a, $2
 
-DrawHP_:
+DrawHP_:	
 	ld [wHPBarType], a
 	push hl
 	ld a, [wLoadedMonHP]
@@ -49,6 +49,7 @@ DrawHP_:
 	ld bc, SCREEN_WIDTH + 1 ; below bar
 .printFraction
 	add hl, bc
+
 	ld de, wLoadedMonHP
 	lb bc, 2, 3
 	call PrintNumber
@@ -56,6 +57,8 @@ DrawHP_:
 	ld [hli], a
 	ld de, wLoadedMonMaxHP
 	lb bc, 2, 3
+	
+.printnum
 	call PrintNumber
 	pop hl
 	pop de
@@ -278,7 +281,7 @@ PrintStatsBox:
 	call PrintStat
 	ld de, wLoadedMonSpeed
 	call PrintStat
-	ld de, wLoadedMonSpecial
+	ld de, wLoadedMonSpecial	
 	jp PrintNumber
 PrintStat:
 	push hl
@@ -406,8 +409,10 @@ StatusScreen2:
 	pop af
 	ld [wLoadedMonLevel], a
 	ld de, wLoadedMonExp
-	coord hl, 12, 4
-	lb bc, 3, 7
+;	coord hl, 12, 4
+;	lb bc, 3, 7
+	coord hl, 11, 4	;joenote - print 8 digit exp number
+	lb bc, 3, 8 
 	call PrintNumber ; exp
 	call CalcExpToLevelUp
 	ld de, wLoadedMonExp
@@ -479,3 +484,4 @@ StatusScreen_PrintPP:
 	dec c
 	jr nz, StatusScreen_PrintPP
 	ret
+

@@ -13,7 +13,7 @@ _VermilionGymText_5cb72::
 _VermilionGymText_5cb77::
 	text "The THUNDERBADGE"
 	line "cranks up your"
-	cont "#MON's SPEED!"
+	cont "#MON's DEFENSE!"	;joenote - changed SPEED to DEFENSE in order to fix a typo
 
 	para "It also lets your"
 	line "#MON FLY any"

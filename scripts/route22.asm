@@ -80,11 +80,7 @@ Route22Script0:
 	db $FF
 
 .firstRivalBattle
-	ld a, $1
-	ld [wEmotionBubbleSpriteIndex], a
-	xor a ; EXCLAMATION_BUBBLE
-	ld [wWhichEmotionBubble], a
-	predef EmotionBubble
+;joenote - play the rival music here so it begins when the rival appears
 	ld a, [wWalkBikeSurfState]
 	and a
 	jr z, .asm_50f4e
@@ -95,6 +91,17 @@ Route22Script0:
 	ld c, BANK(Music_MeetRival)
 	ld a, MUSIC_MEET_RIVAL
 	call PlayMusic
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;wispnote - Show rival's sprite before executing the event's routine.
+	ld a, HS_ROUTE_22_RIVAL_1
+	ld [wMissableObjectIndex], a
+	predef ShowObject2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	ld a, $1
+	ld [wEmotionBubbleSpriteIndex], a
+	xor a ; EXCLAMATION_BUBBLE
+	ld [wWhichEmotionBubble], a
+	predef EmotionBubble
 	ld a, $1
 	ld [H_SPRITEINDEX], a
 	call Route22MoveRivalSprite
@@ -233,11 +240,7 @@ Route22Script3:
 	ret
 
 Route22Script_5104e:
-	ld a, $2
-	ld [wEmotionBubbleSpriteIndex], a
-	xor a ; EXCLAMATION_BUBBLE
-	ld [wWhichEmotionBubble], a
-	predef EmotionBubble
+;joenote - play music here so it starts when the rival appears
 	ld a, [wWalkBikeSurfState]
 	and a
 	jr z, .skipYVisibilityTesta
@@ -249,6 +252,17 @@ Route22Script_5104e:
 	ld [wNewSoundID], a
 	call PlaySound
 	callba Music_RivalAlternateTempo
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;wispnote - Show rival's sprite before executing the event's routine.
+	ld a, HS_ROUTE_22_RIVAL_2
+	ld [wMissableObjectIndex], a
+	predef ShowObject2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	ld a, $2
+	ld [wEmotionBubbleSpriteIndex], a
+	xor a ; EXCLAMATION_BUBBLE
+	ld [wWhichEmotionBubble], a
+	predef EmotionBubble
 	ld a, $2
 	ld [H_SPRITEINDEX], a
 	call Route22MoveRivalSprite

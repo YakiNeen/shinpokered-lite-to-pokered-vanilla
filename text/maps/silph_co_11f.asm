@@ -132,3 +132,4 @@ _SilphCo10Text_6237b::
 	text "The monitor has"
 	line "#MON on it!"
 	done
+

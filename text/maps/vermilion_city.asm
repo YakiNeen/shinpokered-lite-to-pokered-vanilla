@@ -13,7 +13,7 @@ _VermilionCityText_198a7::
 	cont "the harbor?"
 	done
 
-_VermilionCityText_198ac::
+_VermilionCityText_198ac::	
 	text "So, S.S.ANNE has"
 	line "departed!"
 
@@ -21,6 +21,7 @@ _VermilionCityText_198ac::
 	line "about a year."
 	done
 
+	
 _SSAnneWelcomeText4::
 	text "Welcome to S.S."
 	line "ANNE!"
@@ -124,3 +125,4 @@ _VermilionCityText12::
 _VermilionCityText13::
 	text "VERMILION HARBOR"
 	done
+

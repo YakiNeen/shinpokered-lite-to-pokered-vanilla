@@ -26,15 +26,21 @@ VBlank::
 	call VBlankCopy
 	call VBlankCopyDouble
 	call UpdateMovingBgTiles
-	call $ff80 ; hOAMDMA
+	ld a, [hFlagsFFFA]	;see if OAM skip has been enabled (such as while overworld sprites are updating)
+	bit 0, a
+	jr nz, .skipOAM
+	call $ff80 ; hOAMDMA where DMARoutine: is copied
 	ld a, BANK(PrepareOAMData)
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
 	call PrepareOAMData
-
+.skipOAM
 	; VBlank-sensitive operations end.
 
-	call Random
+	;call Random
+	;joenote - implement RNG from Prism and Polished Crystal
+	callba Random_
+	callba AdvanceRNGState
 
 	ld a, [H_VBLANKOCCURRED]
 	and a
@@ -52,25 +58,8 @@ VBlank::
 .skipDec
 	call FadeOutAudio
 
-	ld a, [wAudioROMBank] ; music ROM bank
-	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
-
-	cp BANK(Audio1_UpdateMusic)
-	jr nz, .checkForAudio2
-.audio1
-	call Audio1_UpdateMusic
-	jr .afterMusic
-.checkForAudio2
-	cp BANK(Audio2_UpdateMusic)
-	jr nz, .audio3
-.audio2
-	call Music_DoLowHealthAlarm
-	call Audio2_UpdateMusic
-	jr .afterMusic
-.audio3
-	call Audio3_UpdateMusic
-.afterMusic
+	callbs Music_DoLowHealthAlarm
+	callbs Audio1_UpdateMusic
 
 	callba TrackPlayTime ; keep track of time played
 
@@ -99,6 +88,7 @@ NOT_VBLANKED EQU 1
 	ld [H_VBLANKOCCURRED], a
 .halt
 	halt
+	nop	;joenote - due to a processor bug, nop after halt is best practice
 	ld a, [H_VBLANKOCCURRED]
 	and a
 	jr nz, .halt
